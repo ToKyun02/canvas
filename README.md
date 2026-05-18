@@ -6,6 +6,8 @@
 
 **Docker 기반입니다.**
 
+**명령어와 파일 모두 프로젝트 루트 기반입니다.**
+
 ### 의존성 설치
 
 ```bash
@@ -16,6 +18,14 @@ pnpm i
 
 ```bash
 pnpm build
+```
+
+### env 설정(.env.dev)
+
+```env
+DB_PASSWORD=example_password
+VITE_API_URL=http://localhost:3000
+NODE_ENV=development
 ```
 
 ### dev compose 실행
