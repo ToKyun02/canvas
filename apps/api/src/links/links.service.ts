@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { Link, CreateLinkDto, UpdateLinkDto } from '@repo/api';
+import { CreateLinkDto, Link, UpdateLinkDto } from '@repo/api';
 import * as escapeHtml from 'escape-html';
 
 @Injectable()
