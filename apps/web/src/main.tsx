@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { routeTree } from './routeTree.gen';
 
+import { injectDevCanvasApi } from './global-injection';
 import './index.css';
 
 const router = createRouter({
@@ -21,6 +22,8 @@ const el = document.getElementById('root');
 if (!el) {
   throw new Error('Root element #root not found');
 }
+
+injectDevCanvasApi();
 
 createRoot(el).render(
   <StrictMode>

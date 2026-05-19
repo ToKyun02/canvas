@@ -9,38 +9,63 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as CanvasRouteRouteImport } from './routes/canvas/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CanvasIndexRouteImport } from './routes/canvas/index'
 
+const CanvasRouteRoute = CanvasRouteRouteImport.update({
+  id: '/canvas',
+  path: '/canvas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CanvasIndexRoute = CanvasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CanvasRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/canvas': typeof CanvasRouteRouteWithChildren
+  '/canvas/': typeof CanvasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/canvas': typeof CanvasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/canvas': typeof CanvasRouteRouteWithChildren
+  '/canvas/': typeof CanvasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/canvas' | '/canvas/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/canvas'
+  id: '__root__' | '/' | '/canvas' | '/canvas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CanvasRouteRoute: typeof CanvasRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/canvas': {
+      id: '/canvas'
+      path: '/canvas'
+      fullPath: '/canvas'
+      preLoaderRoute: typeof CanvasRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +73,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/canvas/': {
+      id: '/canvas/'
+      path: '/'
+      fullPath: '/canvas/'
+      preLoaderRoute: typeof CanvasIndexRouteImport
+      parentRoute: typeof CanvasRouteRoute
+    }
   }
 }
 
+interface CanvasRouteRouteChildren {
+  CanvasIndexRoute: typeof CanvasIndexRoute
+}
+
+const CanvasRouteRouteChildren: CanvasRouteRouteChildren = {
+  CanvasIndexRoute: CanvasIndexRoute,
+}
+
+const CanvasRouteRouteWithChildren = CanvasRouteRoute._addFileChildren(
+  CanvasRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CanvasRouteRoute: CanvasRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
