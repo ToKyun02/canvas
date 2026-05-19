@@ -1,10 +1,10 @@
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { routeTree } from './routeTree.gen';
-
+import { ThemeProvider } from './components/themeProvider';
 import { injectDevCanvasApi } from './global-injection';
 import './index.css';
+import { routeTree } from './routeTree.gen';
 
 const router = createRouter({
   routeTree,
@@ -27,6 +27,8 @@ injectDevCanvasApi();
 
 createRoot(el).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <ThemeProvider>
+      <RouterProvider router={router} />
+    </ThemeProvider>
   </StrictMode>,
 );

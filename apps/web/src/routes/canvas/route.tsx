@@ -6,8 +6,8 @@ export const Route = createFileRoute('/canvas')({
 
 function CanvasLayoutComponent() {
   return (
-    <>
+    <div className="h-screen w-full">
       <Outlet />
-    </>
+    </div>
   );
 }
