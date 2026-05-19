@@ -4,22 +4,6 @@
 
 ## 실행방법
 
-**Docker 기반입니다.**
-
-**명령어와 파일 모두 프로젝트 루트 기반입니다.**
-
-### 의존성 설치
-
-```bash
-pnpm i
-```
-
-### app build
-
-```bash
-pnpm build
-```
-
 ### env 설정(.env.dev)
 
 ```env
@@ -31,11 +15,17 @@ NODE_ENV=development
 ### dev compose 실행
 
 ```bash
-pnpm docker:dev
+docker compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up
 ```
 
 ### dev compose 강제 이미지 빌드
 
 ```bash
-pnpm docker:dev:build
+docker compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up --build
+```
+
+### 종료
+
+```bash
+docker compose down
 ```
