@@ -1,4 +1,5 @@
 import { devCanvasRegistry } from '@/dev/registry';
+import { useAppStore } from '@/stores';
 import { assignRef } from '@/utils/assignRef';
 import * as fabric from 'fabric';
 import { useEffect, type Ref, type RefObject } from 'react';
@@ -42,15 +43,24 @@ export function useFabricCanvas(
       height: height || options?.height,
     });
 
+    const syncCanvasSize = (size: { width: number; height: number }) => {
+      if (size.width > 0 && size.height > 0) {
+        useAppStore.getState().setCanvasSize(size);
+      }
+    };
+
     const resize = () => {
       const size = measureContainer(container);
       if (size.width > 0 && size.height > 0) {
         canvas.setDimensions(size);
+        syncCanvasSize(size);
       }
     };
 
     const observer = new ResizeObserver(resize);
     observer.observe(container);
+
+    syncCanvasSize({ width, height });
 
     assignRef(ref, canvas);
     devCanvasRegistry.register(canvas);
