@@ -1,5 +1,5 @@
 import { devCanvasRegistry } from '@/dev/registry';
-import { assignRef } from '@/lib/utils';
+import { assignRef } from '@/utils/assignRef';
 import * as fabric from 'fabric';
 import { useEffect, type Ref, type RefObject } from 'react';
 
