@@ -1,4 +1,6 @@
 import { Canvas } from '@/components/canvas';
+import { Position } from '@/components/canvas/position';
+import { ZoomLevel } from '@/components/canvas/zoomLevel';
 import { ModeToggle } from '@/components/ui/theme-mode-toggle';
 import { useGlobalShortcuts } from '@/features/shortcuts/hooks/useGlobalShortcuts';
 import { createFileRoute } from '@tanstack/react-router';
@@ -29,6 +31,8 @@ function CanvasPage() {
   return (
     <>
       <ModeToggle className="fixed right-4 top-4 z-10 cursor-pointer" />
+      <ZoomLevel />
+      <Position />
       <Canvas onLoad={handleCanvasLoad} className="dark:bg-mist-700 h-full w-full bg-gray-200" />
     </>
   );
