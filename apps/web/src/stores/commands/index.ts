@@ -1,0 +1,119 @@
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+import { createCanvasSlice } from './slices/canvasSlice';
+import { createHistorySlice } from './slices/historySlice';
+import { createSelectionSlice } from './slices/selectionSlice';
+import { AppState, Command } from './types';
+
+export const COMMANDS: Command[] = [
+  // tools
+  {
+    id: 'tool.move',
+    label: '이동',
+    shortcut: 'v',
+    icon: 'cursor',
+    group: 'tools',
+    isActive: (store) => store.tool === 'move',
+    execute: (store) => store.setTool('move'),
+  },
+  {
+    id: 'tool.text',
+    label: '텍스트',
+    shortcut: 't',
+    icon: 'letter-t',
+    group: 'tools',
+    isActive: (store) => store.tool === 'text',
+    execute: (store) => store.setTool('text'),
+  },
+
+  // history
+  {
+    id: 'history.undo',
+    label: '실행 취소',
+    shortcut: 'mod+z',
+    icon: 'arrow-back-up',
+    group: 'history',
+    isDisabled: (store) => !store.canUndo,
+    execute: (store) => store.undo(),
+  },
+  {
+    id: 'history.redo',
+    label: '복원',
+    shortcut: 'mod+shift+z',
+    icon: 'arrow-forward-up',
+    group: 'history',
+    isDisabled: (store) => !store.canRedo,
+    execute: (store) => store.redo(),
+  },
+
+  // selections
+  {
+    id: 'selection.selectAll',
+    label: '전체 선택',
+    shortcut: 'mod+a',
+    group: 'selections',
+    execute: (store) => store.selectAll(),
+  },
+  {
+    id: 'selection.clearSelection',
+    label: '선택 해제',
+    shortcut: 'escape',
+    group: 'selections',
+    isDisabled: (store) => store.selectedIds.length === 0,
+    execute: (store) => store.clearSelection(),
+  },
+  {
+    id: 'selection.deleteSelection',
+    label: '삭제',
+    shortcut: 'delete',
+    group: 'selections',
+    isDisabled: (store) => store.selectedIds.length === 0,
+    execute: (store) => store.deleteSelection(),
+  },
+
+  // views
+  {
+    id: 'views.zoomIn',
+    label: '확대',
+    shortcut: 'mod+=',
+    group: 'views',
+    execute: (store) => store.zoomIn(),
+  },
+  {
+    id: 'views.zoomOut',
+    label: '축소',
+    shortcut: 'mod+-',
+    group: 'views',
+    execute: (store) => store.zoomOut(),
+  },
+  {
+    id: 'views.zoomToFit',
+    label: '화면에 맞추기',
+    shortcut: 'mod+0',
+    group: 'views',
+    execute: (store) => store.zoomToFit(),
+  },
+];
+
+export const COMMAND_MAP = new Map<string, Command>(COMMANDS.map((command) => [command.id, command]));
+
+export const executeCommand = (id: string, store: AppState) => {
+  const cmd = COMMAND_MAP.get(id);
+  if (!cmd) return false;
+  if (cmd.isDisabled?.(store)) return false;
+  cmd.execute(store);
+  return true;
+};
+
+export const useAppStore = create<AppState>()(
+  devtools(
+    (...a) => ({
+      ...createCanvasSlice(...a),
+      ...createHistorySlice(...a),
+      ...createSelectionSlice(...a),
+    }),
+    {
+      name: 'app-store',
+    },
+  ),
+);
