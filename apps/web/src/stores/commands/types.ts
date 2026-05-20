@@ -7,6 +7,7 @@ export interface CanvasState {
     x: number;
     y: number;
   };
+  panBy: (delta: { x: number; y: number }) => void;
   setTool: (tool: Tool) => void;
   setZoom: (zoom: number) => void;
   zoomIn: () => void;

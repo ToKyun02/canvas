@@ -5,7 +5,7 @@ export const createCanvasSlice: StateCreator<AppState, [], [], CanvasState> = (s
   tool: 'move',
   zoom: 1,
   position: { x: 0, y: 0 },
-
+  panBy: (delta) => set((s) => ({ position: { x: s.position.x + delta.x, y: s.position.y + delta.y } })),
   setTool: (tool) => set({ tool }),
   setZoom: (zoom) => set({ zoom }),
   zoomIn: () => set((s) => ({ zoom: Math.min(+(s.zoom * 1.25).toFixed(2), 8) })),
