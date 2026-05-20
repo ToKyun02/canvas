@@ -1,5 +1,10 @@
 export type Tool = 'move' | 'text';
 
+export interface CanvasSize {
+  width: number;
+  height: number;
+}
+
 export interface CanvasState {
   tool: Tool;
   zoom: number;
@@ -7,9 +12,12 @@ export interface CanvasState {
     x: number;
     y: number;
   };
+  canvasSize: CanvasSize;
   panBy: (delta: { x: number; y: number }) => void;
   setTool: (tool: Tool) => void;
   setZoom: (zoom: number) => void;
+  setCanvasSize: (size: CanvasSize) => void;
+  setViewport: (viewport: { zoom: number; position: { x: number; y: number } }) => void;
   zoomIn: () => void;
   zoomOut: () => void;
   zoomToFit: () => void;
