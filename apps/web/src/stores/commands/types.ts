@@ -37,7 +37,12 @@ export interface SelectionState {
   deleteSelection: () => void;
 }
 
-export type AppState = CanvasState & HistoryState & SelectionState;
+export interface EditorState {
+  isPropertiesSidebarOpen: boolean;
+  togglePropertiesSidebar: () => void;
+}
+
+export type AppState = CanvasState & HistoryState & SelectionState & EditorState;
 
 export interface Command {
   id: string;

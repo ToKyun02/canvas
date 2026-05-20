@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { createCanvasSlice } from './slices/canvasSlice';
+import { createEditorSlice } from './slices/editorSlice';
 import { createHistorySlice } from './slices/historySlice';
 import { createSelectionSlice } from './slices/selectionSlice';
 import { AppState, Command } from './types';
@@ -93,6 +94,15 @@ export const COMMANDS: Command[] = [
     group: 'views',
     execute: (store) => store.zoomToFit(),
   },
+
+  // editor
+  {
+    id: 'editor.togglePropertiesSidebar',
+    label: '속성 패널 토글',
+    shortcut: 'mod+/',
+    group: 'editor',
+    execute: (store) => store.togglePropertiesSidebar(),
+  },
 ];
 
 export const COMMAND_MAP = new Map<string, Command>(COMMANDS.map((command) => [command.id, command]));
@@ -111,6 +121,7 @@ export const useAppStore = create<AppState>()(
       ...createCanvasSlice(...a),
       ...createHistorySlice(...a),
       ...createSelectionSlice(...a),
+      ...createEditorSlice(...a),
     }),
     {
       name: 'app-store',

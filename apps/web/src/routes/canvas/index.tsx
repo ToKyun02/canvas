@@ -30,10 +30,10 @@ function CanvasPage() {
   }, []);
   return (
     <>
-      <ModeToggle className="fixed right-4 top-4 z-10 cursor-pointer" />
+      <ModeToggle className="fixed left-4 top-20 z-10 cursor-pointer" />
       <ZoomLevel />
       <Position />
-      <Canvas onLoad={handleCanvasLoad} className="dark:bg-mist-700 h-full w-full bg-gray-200" />
+      <Canvas onLoad={handleCanvasLoad} className="dark:bg-mist-700 h-screen w-full bg-gray-200" />
     </>
   );
 }
