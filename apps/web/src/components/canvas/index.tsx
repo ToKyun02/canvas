@@ -1,4 +1,5 @@
 import { useCanvasCamera } from '@/features/canvas/hooks/useCanvasCamera';
+import { useCanvasNodes } from '@/features/canvas/hooks/useCanvasNodes';
 import { useCanvasSelection } from '@/features/canvas/hooks/useCanvasSelection';
 import { useDrawingTools } from '@/features/canvas/hooks/useDrawingTools';
 import { useFabricCanvas } from '@/features/canvas/hooks/useFabricCanvas';
@@ -33,6 +34,7 @@ export function Canvas({ className, onLoad, ref }: CanvasProps) {
   useCanvasCamera(canvas);
   useDrawingTools(canvas);
   useCanvasSelection(canvas);
+  useCanvasNodes(canvas);
 
   return (
     <div ref={containerRef} className={className ?? 'h-full w-full'}>

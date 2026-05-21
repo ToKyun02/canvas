@@ -1,4 +1,6 @@
 import { resetMoveCursor, setDrawingCursor } from '@/features/canvas/utils/cursor';
+import { useAppStore } from '@/stores';
+import type { CanvasNodeState } from '@/stores/nodes/types';
 import type { NodeDefinition } from '@/stores/nodes/types';
 import type * as fabric from 'fabric';
 import { Rect, type TPointerEventInfo } from 'fabric';
@@ -75,6 +77,7 @@ export function attachPlacement(
     const object = definition.createFabricObject(state);
 
     canvas.add(object);
+    useAppStore.getState().addNode(state as CanvasNodeState);
     isDrawing = false;
     startPoint = null;
     cleanupPreview();
@@ -239,6 +242,7 @@ export function attachDragPlacement(
     const object = definition.createFabricObject(state);
 
     canvas.add(object);
+    useAppStore.getState().addNode(state as CanvasNodeState);
     session.detach();
     onComplete?.();
     definition.onPlaced?.(object, canvas);

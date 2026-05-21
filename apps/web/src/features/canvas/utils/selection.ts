@@ -1,6 +1,5 @@
 import type * as fabric from 'fabric';
 
-
 type NodeData = {
   nodeId?: string;
   nodeType?: string;
@@ -8,6 +7,11 @@ type NodeData = {
 type NodeFabricObject = fabric.FabricObject & {
   data?: NodeData;
 };
+
+export function getNodeById(canvas: fabric.Canvas, id: string) {
+  return findObjectsByIds(canvas, [id])[0];
+}
+
 export function getNodeId(object: fabric.FabricObject): string | undefined {
   return (object as NodeFabricObject).data?.nodeId;
 }
