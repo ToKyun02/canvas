@@ -1,12 +1,13 @@
+import { NODE_DEFINITIONS } from '@/stores/nodes/registry';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { createCanvasSlice } from './slices/canvasSlice';
+import { createEditorSlice } from './slices/editorSlice';
 import { createHistorySlice } from './slices/historySlice';
 import { createSelectionSlice } from './slices/selectionSlice';
 import { AppState, Command } from './types';
 
-export const COMMANDS: Command[] = [
-  // tools
+const TOOL_COMMANDS: Command[] = [
   {
     id: 'tool.move',
     label: '이동',
@@ -16,15 +17,20 @@ export const COMMANDS: Command[] = [
     isActive: (store) => store.tool === 'move',
     execute: (store) => store.setTool('move'),
   },
-  {
-    id: 'tool.text',
-    label: '텍스트',
-    shortcut: 't',
-    icon: 'letter-t',
+  ...Object.values(NODE_DEFINITIONS).map((definition) => ({
+    id: `tool.${definition.tool}`,
+    label: definition.label,
+    shortcut: definition.shortcut,
+    icon: definition.icon,
     group: 'tools',
-    isActive: (store) => store.tool === 'text',
-    execute: (store) => store.setTool('text'),
-  },
+    isActive: (store: AppState) => store.tool === definition.tool,
+    execute: (store: AppState) => store.setTool(definition.tool as AppState['tool']),
+  })),
+];
+
+export const COMMANDS: Command[] = [
+  // tools
+  ...TOOL_COMMANDS,
 
   // history
   {
@@ -59,8 +65,10 @@ export const COMMANDS: Command[] = [
     label: '선택 해제',
     shortcut: 'escape',
     group: 'selections',
-    isDisabled: (store) => store.selectedIds.length === 0,
-    execute: (store) => store.clearSelection(),
+    execute: (store) => {
+      store.clearSelection();
+      store.setTool('move');
+    },
   },
   {
     id: 'selection.deleteSelection',
@@ -93,6 +101,15 @@ export const COMMANDS: Command[] = [
     group: 'views',
     execute: (store) => store.zoomToFit(),
   },
+
+  // editor
+  {
+    id: 'editor.togglePropertiesSidebar',
+    label: '속성 패널 토글',
+    shortcut: 'mod+/',
+    group: 'editor',
+    execute: (store) => store.togglePropertiesSidebar(),
+  },
 ];
 
 export const COMMAND_MAP = new Map<string, Command>(COMMANDS.map((command) => [command.id, command]));
@@ -111,6 +128,7 @@ export const useAppStore = create<AppState>()(
       ...createCanvasSlice(...a),
       ...createHistorySlice(...a),
       ...createSelectionSlice(...a),
+      ...createEditorSlice(...a),
     }),
     {
       name: 'app-store',

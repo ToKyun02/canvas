@@ -1,4 +1,6 @@
-export type Tool = 'move' | 'text';
+import type { NodeTool } from '@/stores/nodes/registry';
+
+export type Tool = 'move' | NodeTool;
 
 export interface CanvasSize {
   width: number;
@@ -32,12 +34,19 @@ export interface HistoryState {
 
 export interface SelectionState {
   selectedIds: string[];
+  deleteSelectionRequest: number;
+  setSelectedIds: (ids: string[]) => void;
   selectAll: () => void;
   clearSelection: () => void;
   deleteSelection: () => void;
 }
 
-export type AppState = CanvasState & HistoryState & SelectionState;
+export interface EditorState {
+  isPropertiesSidebarOpen: boolean;
+  togglePropertiesSidebar: () => void;
+}
+
+export type AppState = CanvasState & HistoryState & SelectionState & EditorState;
 
 export interface Command {
   id: string;

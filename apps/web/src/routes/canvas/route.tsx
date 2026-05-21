@@ -1,3 +1,6 @@
+import { PropertiesSidebar } from '@/components/propertiesSidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { useAppStore } from '@/stores';
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/canvas')({
@@ -5,9 +8,12 @@ export const Route = createFileRoute('/canvas')({
 });
 
 function CanvasLayoutComponent() {
+  const open = useAppStore((state) => state.isPropertiesSidebarOpen);
+  const setOpen = useAppStore((state) => state.togglePropertiesSidebar);
   return (
-    <div className="h-screen w-full">
+    <SidebarProvider open={open} onOpenChange={setOpen}>
       <Outlet />
-    </div>
+      <PropertiesSidebar />
+    </SidebarProvider>
   );
 }
