@@ -18,7 +18,6 @@ export function useGlobalShortcuts() {
         if (inEditableContext && !hasModifier) continue;
         if (!matchCombo(cmd.shortcut, e)) continue;
         if (cmd.isDisabled?.(store)) continue;
-
         e.preventDefault();
         cmd.execute(store);
         break;

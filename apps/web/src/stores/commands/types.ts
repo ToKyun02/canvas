@@ -1,4 +1,6 @@
-export type Tool = 'move' | 'text';
+import type { NodeTool } from '@/stores/nodes/registry';
+
+export type Tool = 'move' | NodeTool;
 
 export interface CanvasSize {
   width: number;

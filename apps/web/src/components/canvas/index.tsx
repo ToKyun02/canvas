@@ -1,4 +1,5 @@
 import { useCanvasCamera } from '@/features/canvas/hooks/useCanvasCamera';
+import { useDrawingTools } from '@/features/canvas/hooks/useDrawingTools';
 import { useFabricCanvas } from '@/features/canvas/hooks/useFabricCanvas';
 import { assignRef } from '@/utils/assignRef';
 import type * as fabric from 'fabric';
@@ -29,6 +30,7 @@ export function Canvas({ className, onLoad, ref }: CanvasProps) {
     containerRef,
   });
   useCanvasCamera(canvas);
+  useDrawingTools(canvas);
 
   return (
     <div ref={containerRef} className={className ?? 'h-full w-full'}>
