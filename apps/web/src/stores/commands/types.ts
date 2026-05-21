@@ -34,6 +34,8 @@ export interface HistoryState {
 
 export interface SelectionState {
   selectedIds: string[];
+  deleteSelectionRequest: number;
+  setSelectedIds: (ids: string[]) => void;
   selectAll: () => void;
   clearSelection: () => void;
   deleteSelection: () => void;
