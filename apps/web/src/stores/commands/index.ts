@@ -78,6 +78,14 @@ export const COMMANDS: Command[] = [
     isDisabled: (store) => store.selectedIds.length === 0,
     execute: (store) => store.deleteSelection(),
   },
+  {
+    id: 'selection.deleteSelectionByBackspace',
+    label: '삭제',
+    shortcut: 'backspace',
+    group: 'selections',
+    isDisabled: (store) => store.selectedIds.length === 0,
+    execute: (store) => store.deleteSelection(),
+  },
 
   // views
   {
