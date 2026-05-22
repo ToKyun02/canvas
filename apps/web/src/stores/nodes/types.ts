@@ -11,8 +11,6 @@ export type NodePlacement = {
   height?: number;
 };
 
-export type DrawingMode = 'click-or-drag' | 'drag';
-
 export interface NodeDefinition {
   type: string;
   tool: string;
@@ -20,7 +18,6 @@ export interface NodeDefinition {
   shortcut?: string;
   icon?: string;
   cursor?: string;
-  drawingMode: DrawingMode;
   createState: (placement: NodePlacement) => BaseNodeState;
   createFabricObject: (state: BaseNodeState) => fabric.FabricObject;
   stateFromFabricObject: (object: fabric.FabricObject) => CanvasNodeState;
