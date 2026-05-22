@@ -2,6 +2,7 @@ import { devCanvasRegistry } from '@/dev/registry';
 import { useAppStore } from '@/stores';
 import { assignRef } from '@/utils/assignRef';
 import * as fabric from 'fabric';
+import { InteractiveFabricObject } from 'fabric';
 import { useEffect, type Ref, type RefObject } from 'react';
 
 type FabricCanvasOptions = NonNullable<ConstructorParameters<typeof fabric.Canvas>[1]>;
@@ -37,6 +38,19 @@ export function useFabricCanvas(
     }
 
     const { width, height } = measureContainer(container);
+
+    Object.assign(InteractiveFabricObject.ownDefaults, {
+      borderColor: '#6366f1',
+      borderScaleFactor: 2,
+      cornerColor: '#6366f1',
+      cornerStrokeColor: '#ffffff',
+      cornerSize: 10,
+      touchCornerSize: 28,
+      transparentCorners: false,
+      cornerStyle: 'circle',
+      padding: 4,
+    });
+
     const canvas = new fabric.Canvas(el, {
       ...options,
       width: width || options?.width,
