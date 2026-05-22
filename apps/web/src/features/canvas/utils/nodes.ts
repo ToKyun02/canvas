@@ -1,4 +1,5 @@
 import { getNodeId } from '@/features/canvas/utils/selection';
+import { configureNodeTransform } from '@/stores/nodes/fabric';
 import { getNodeDefinitionByType } from '@/stores/nodes/registry';
 import type { CanvasNodeState } from '@/stores/nodes/types';
 import type * as fabric from 'fabric';
@@ -32,6 +33,17 @@ export function applyStateToFabricObject(object: fabric.FabricObject, state: Can
 
   definition.applyStateToFabricObject(object, state);
   object.setCoords();
+}
+
+export function createFabricObjectFromState(state: CanvasNodeState) {
+  const definition = getNodeDefinitionByType(state.type);
+  if (!definition) return null;
+
+  const object = definition.createFabricObject(state);
+  definition.applyStateToFabricObject(object, state);
+  configureNodeTransform(object);
+  object.setCoords();
+  return object;
 }
 
 export function applyNodeStateToCanvas(canvas: fabric.Canvas, state: CanvasNodeState) {

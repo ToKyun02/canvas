@@ -1,4 +1,5 @@
 import { useCanvasCamera } from '@/features/canvas/hooks/useCanvasCamera';
+import { useCanvasHydration } from '@/features/canvas/hooks/useCanvasHydration';
 import { useCanvasNodes } from '@/features/canvas/hooks/useCanvasNodes';
 import { useCanvasSelection } from '@/features/canvas/hooks/useCanvasSelection';
 import { useDrawingTools } from '@/features/canvas/hooks/useDrawingTools';
@@ -33,6 +34,7 @@ export function Canvas({ className, onLoad, ref }: CanvasProps) {
     containerRef,
   });
   useCanvasCamera(canvas);
+  useCanvasHydration(canvas);
   useDrawingTools(canvas);
   useCanvasSelection(canvas);
   useCanvasNodes(canvas);

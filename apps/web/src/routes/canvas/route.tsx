@@ -9,7 +9,7 @@ export const Route = createFileRoute('/canvas')({
 
 function CanvasLayoutComponent() {
   const open = useAppStore((state) => state.isPropertiesSidebarOpen);
-  const setOpen = useAppStore((state) => state.togglePropertiesSidebar);
+  const setOpen = useAppStore((state) => state.setPropertiesSidebarOpen);
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
       <Outlet />

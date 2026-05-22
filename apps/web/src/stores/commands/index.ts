@@ -1,6 +1,15 @@
+import {
+  APP_STORAGE_KEY,
+  APP_STORAGE_VERSION,
+  migrateAppState,
+  partializeAppState,
+} from '@/stores/persistence/appStorage';
+import { migrateLegacyStorageKeys } from '@/stores/persistence/migrateLegacyStorage';
+
+migrateLegacyStorageKeys();
 import { NODE_DEFINITIONS } from '@/stores/nodes/registry';
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { createJSONStorage, devtools, persist } from 'zustand/middleware';
 import { createCanvasSlice } from './slices/canvasSlice';
 import { createEditorSlice } from './slices/editorSlice';
 import { createHistorySlice } from './slices/historySlice';
@@ -132,16 +141,25 @@ export const executeCommand = (id: string, store: AppState) => {
 };
 
 export const useAppStore = create<AppState>()(
-  devtools(
-    (...a) => ({
-      ...createCanvasSlice(...a),
-      ...createHistorySlice(...a),
-      ...createSelectionSlice(...a),
-      ...createEditorSlice(...a),
-      ...createNodesSlice(...a),
-    }),
+  persist(
+    devtools(
+      (...a) => ({
+        ...createCanvasSlice(...a),
+        ...createHistorySlice(...a),
+        ...createSelectionSlice(...a),
+        ...createEditorSlice(...a),
+        ...createNodesSlice(...a),
+      }),
+      {
+        name: 'app-store',
+      },
+    ),
     {
-      name: 'app-store',
+      name: APP_STORAGE_KEY,
+      storage: createJSONStorage(() => localStorage),
+      partialize: partializeAppState,
+      version: APP_STORAGE_VERSION,
+      migrate: migrateAppState,
     },
   ),
 );

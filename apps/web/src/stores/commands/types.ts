@@ -44,6 +44,7 @@ export interface SelectionState {
 
 export interface EditorState {
   isPropertiesSidebarOpen: boolean;
+  setPropertiesSidebarOpen: (open: boolean) => void;
   togglePropertiesSidebar: () => void;
 }
 
