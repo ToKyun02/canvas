@@ -9,7 +9,7 @@ export const APP_STORAGE_VERSION = 2;
  */
 export const PERSIST_GROUPS = {
   document: ['nodes', 'nodeOrder'] as const,
-  preferences: ['isPropertiesSidebarOpen'] as const,
+  preferences: ['isPropertiesSidebarOpen', 'isVisibleNodeLabels'] as const,
 } as const;
 
 type PersistedKey = {
@@ -24,6 +24,7 @@ const DEFAULTS: PersistedAppState = {
   nodes: {},
   nodeOrder: [],
   isPropertiesSidebarOpen: true,
+  isVisibleNodeLabels: true,
 };
 
 export function partializeAppState(state: AppState): PersistedAppState {

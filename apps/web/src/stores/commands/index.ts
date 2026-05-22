@@ -121,6 +121,13 @@ export const COMMANDS: Command[] = [
     group: 'editor',
     execute: (store) => store.togglePropertiesSidebar(),
   },
+  {
+    id: 'editor.toggleNodeLabelsVisibility',
+    label: '노드 라벨 토글',
+    shortcut: 'mod+.',
+    group: 'editor',
+    execute: (store) => store.toggleNodeLabelsVisibility(),
+  },
 ];
 
 export const COMMAND_MAP = new Map<string, Command>(COMMANDS.map((command) => [command.id, command]));

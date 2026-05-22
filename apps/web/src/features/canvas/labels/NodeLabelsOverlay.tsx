@@ -2,8 +2,8 @@ import { getLabelScenePosition, sceneToScreen } from '@/features/canvas/labels/c
 import { NodeLabel } from '@/features/canvas/labels/NodeLabel';
 import { stateFromFabricObject } from '@/features/canvas/utils/nodes';
 import { getNodeById } from '@/features/canvas/utils/selection';
-import { getObjectTopLeft } from '@/stores/nodes/fabric';
 import { useAppStore } from '@/stores';
+import { getObjectTopLeft } from '@/stores/nodes/fabric';
 import type * as fabric from 'fabric';
 import { useEffect, useReducer } from 'react';
 
@@ -11,11 +11,7 @@ type NodeLabelsOverlayProps = {
   canvas: fabric.Canvas | null;
 };
 
-function getLabelAnchorPosition(
-  canvas: fabric.Canvas,
-  nodeId: string,
-  storePosition: { x: number; y: number },
-) {
+function getLabelAnchorPosition(canvas: fabric.Canvas, nodeId: string, storePosition: { x: number; y: number }) {
   const object = getNodeById(canvas, nodeId);
   if (!object) return storePosition;
 
@@ -34,6 +30,8 @@ export function NodeLabelsOverlay({ canvas }: NodeLabelsOverlayProps) {
 
   const [, forceRender] = useReducer((value: number) => value + 1, 0);
 
+  const isVisible = useAppStore((s) => s.isVisibleNodeLabels);
+
   useEffect(() => {
     if (!canvas) return;
 
@@ -51,6 +49,8 @@ export function NodeLabelsOverlay({ canvas }: NodeLabelsOverlayProps) {
   }, [canvas]);
 
   if (!canvas) return null;
+
+  if (!isVisible) return null;
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
