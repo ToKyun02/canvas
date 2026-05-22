@@ -45,12 +45,12 @@ export function configureNodeTransform(object: fabric.FabricObject) {
 
 export function readBaseNodeFields(object: fabric.FabricObject) {
   const { width, height } = readScaledSize(object);
+  const originX = object.originX ?? 'left';
+  const originY = object.originY ?? 'top';
+  const { x, y } = object.translateToOriginPoint(object.getCenterPoint(), originX, originY);
 
   return {
-    position: {
-      x: object.left ?? 0,
-      y: object.top ?? 0,
-    },
+    position: { x, y },
     size: { width, height },
     visibility: object.visible ?? true,
     locked: object.selectable === false,

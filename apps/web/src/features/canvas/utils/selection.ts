@@ -28,14 +28,29 @@ export function getNodeObjects(canvas: fabric.Canvas): fabric.FabricObject[] {
 }
 
 export function findObjectsByIds(canvas: fabric.Canvas, ids: string[]): fabric.FabricObject[] {
-  const idSet = new Set(ids);
-  return getNodeObjects(canvas).filter((object) => {
+  const byId = new Map<string, fabric.FabricObject>();
+
+  for (const object of getNodeObjects(canvas)) {
     const id = getNodeId(object);
-    return id ? idSet.has(id) : false;
+    if (id) {
+      byId.set(id, object);
+    }
+  }
+
+  return ids.flatMap((id) => {
+    const object = byId.get(id);
+    return object ? [object] : [];
   });
 }
 
 export function arraysEqual(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
   return a.every((value, index) => value === b[index]);
+}
+
+export function setsEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+
+  const setB = new Set(b);
+  return a.every((value) => setB.has(value));
 }

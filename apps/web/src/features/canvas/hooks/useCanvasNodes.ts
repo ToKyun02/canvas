@@ -1,4 +1,5 @@
 import { applyNodeStateToCanvas, stateFromFabricObject } from '@/features/canvas/utils/nodes';
+import { isCanvasInteracting, markCanvasSyncEnd, markCanvasSyncStart } from '@/features/canvas/utils/canvasSync';
 import { normalizeTextboxScalesInTarget } from '@/features/canvas/utils/textboxScaling';
 import { getNodeId } from '@/features/canvas/utils/selection';
 import { useAppStore } from '@/stores';
@@ -28,6 +29,21 @@ function nodesEqual(a: unknown, b: unknown) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
+function getActiveSelectionNodeIds(canvas: fabric.Canvas) {
+  const activeObject = canvas.getActiveObject();
+
+  if (!(activeObject instanceof ActiveSelection)) {
+    return null;
+  }
+
+  return new Set(
+    activeObject
+      .getObjects()
+      .map(getNodeId)
+      .filter((id): id is string => Boolean(id)),
+  );
+}
+
 export function useCanvasNodes(canvas: fabric.Canvas | null) {
   const nodes = useAppStore((s) => s.nodes);
   const nodeOrder = useAppStore((s) => s.nodeOrder);
@@ -43,9 +59,9 @@ export function useCanvasNodes(canvas: fabric.Canvas | null) {
         event.target.canvas?.requestRenderAll();
       }
 
-      syncingFromCanvasRef.current = true;
+      markCanvasSyncStart(syncingFromCanvasRef);
       syncTargetToStore(event.target);
-      syncingFromCanvasRef.current = false;
+      markCanvasSyncEnd(syncingFromCanvasRef);
     };
 
     const onScaling = (event: { target?: fabric.FabricObject }) => {
@@ -60,28 +76,44 @@ export function useCanvasNodes(canvas: fabric.Canvas | null) {
       const id = event.target ? getNodeId(event.target) : undefined;
       if (!id) return;
 
-      syncingFromCanvasRef.current = true;
+      markCanvasSyncStart(syncingFromCanvasRef);
       useAppStore.getState().removeNodes([id]);
-      syncingFromCanvasRef.current = false;
+      markCanvasSyncEnd(syncingFromCanvasRef);
+    };
+
+    const onTransformStart = () => {
+      markCanvasSyncStart(syncingFromCanvasRef);
+    };
+
+    const onTransformEnd = () => {
+      markCanvasSyncEnd(syncingFromCanvasRef);
     };
 
     canvas.on('object:modified', onModified);
     canvas.on('object:scaling', onScaling);
     canvas.on('text:changed', onModified);
     canvas.on('object:removed', onRemoved);
+    canvas.on('mouse:down:before', onTransformStart);
+    canvas.on('mouse:up', onTransformEnd);
 
     return () => {
       canvas.off('object:modified', onModified);
       canvas.off('object:scaling', onScaling);
       canvas.off('text:changed', onModified);
       canvas.off('object:removed', onRemoved);
+      canvas.off('mouse:down:before', onTransformStart);
+      canvas.off('mouse:up', onTransformEnd);
     };
   }, [canvas]);
 
   useEffect(() => {
-    if (!canvas || syncingFromCanvasRef.current) return;
+    if (!canvas || syncingFromCanvasRef.current || isCanvasInteracting(canvas)) return;
+
+    const activeSelectionIds = getActiveSelectionNodeIds(canvas);
 
     for (const id of nodeOrder) {
+      if (activeSelectionIds?.has(id)) continue;
+
       const storeNode = nodes[id];
       if (!storeNode) continue;
 

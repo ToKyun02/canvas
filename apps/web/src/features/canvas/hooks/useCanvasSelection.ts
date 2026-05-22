@@ -1,4 +1,10 @@
-import { arraysEqual, findObjectsByIds, getNodeObjects, getSelectedNodeIds } from '@/features/canvas/utils/selection';
+import { isCanvasInteracting, markCanvasSyncEnd, markCanvasSyncStart } from '@/features/canvas/utils/canvasSync';
+import {
+  findObjectsByIds,
+  getNodeObjects,
+  getSelectedNodeIds,
+  setsEqual,
+} from '@/features/canvas/utils/selection';
 import { useAppStore } from '@/stores';
 import { configureNodeTransform } from '@/stores/nodes/fabric';
 import type * as fabric from 'fabric';
@@ -11,6 +17,16 @@ function createActiveSelection(objects: fabric.FabricObject[]) {
   const selection = new ActiveSelection(objects);
   configureNodeTransform(selection);
   return selection;
+}
+
+function isSameActiveSelection(canvas: fabric.Canvas, selectedIds: string[]) {
+  const activeObject = canvas.getActiveObject();
+
+  if (!(activeObject instanceof ActiveSelection) || selectedIds.length <= 1) {
+    return false;
+  }
+
+  return setsEqual(getSelectedNodeIds(canvas), selectedIds);
 }
 
 function applySelectionToCanvas(canvas: fabric.Canvas, selectedIds: string[]) {
@@ -47,8 +63,20 @@ function applySelectionToCanvas(canvas: fabric.Canvas, selectedIds: string[]) {
 
   if (objects.length === 1) {
     const object = objects[0]!;
+    const activeObject = canvas.getActiveObject();
+
+    if (activeObject === object) {
+      configureNodeTransform(object);
+      return;
+    }
+
     configureNodeTransform(object);
     canvas.setActiveObject(object);
+    return;
+  }
+
+  if (isSameActiveSelection(canvas, selectedIds)) {
+    configureNodeTransform(canvas.getActiveObject()!);
     return;
   }
 
@@ -64,14 +92,9 @@ export function useCanvasSelection(canvas: fabric.Canvas | null) {
     if (!canvas) return;
 
     const syncToStore = () => {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        configureNodeTransform(activeObject);
-      }
-
-      syncingFromCanvasRef.current = true;
+      markCanvasSyncStart(syncingFromCanvasRef);
       useAppStore.getState().setSelectedIds(getSelectedNodeIds(canvas));
-      syncingFromCanvasRef.current = false;
+      markCanvasSyncEnd(syncingFromCanvasRef);
     };
 
     canvas.on('selection:created', syncToStore);
@@ -86,18 +109,20 @@ export function useCanvasSelection(canvas: fabric.Canvas | null) {
   }, [canvas]);
 
   useEffect(() => {
-    if (!canvas || syncingFromCanvasRef.current) return;
+    if (!canvas || syncingFromCanvasRef.current || isCanvasInteracting(canvas)) return;
 
     const canvasIds = getSelectedNodeIds(canvas);
 
     if (selectedIds.length === 1 && selectedIds[0] === SELECT_ALL) {
       applySelectionToCanvas(canvas, selectedIds);
+      markCanvasSyncStart(syncingFromCanvasRef);
       useAppStore.getState().setSelectedIds(getSelectedNodeIds(canvas));
+      markCanvasSyncEnd(syncingFromCanvasRef);
       canvas.requestRenderAll();
       return;
     }
 
-    if (arraysEqual(canvasIds, selectedIds)) return;
+    if (setsEqual(canvasIds, selectedIds)) return;
 
     applySelectionToCanvas(canvas, selectedIds);
     canvas.requestRenderAll();
