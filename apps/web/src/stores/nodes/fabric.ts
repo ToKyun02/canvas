@@ -1,4 +1,10 @@
 import type { CanvasNodeState } from './types';
+import {
+  configureSelectionMoveOnly,
+  configureTextboxControls,
+  isTextboxNode,
+} from '@/features/canvas/utils/textboxScaling';
+import { ActiveSelection } from 'fabric';
 import type * as fabric from 'fabric';
 
 export function readScaledSize(object: fabric.FabricObject) {
@@ -6,6 +12,35 @@ export function readScaledSize(object: fabric.FabricObject) {
     width: (object.width ?? 0) * (object.scaleX ?? 1),
     height: (object.height ?? 0) * (object.scaleY ?? 1),
   };
+}
+
+export function configureNodeTransform(object: fabric.FabricObject) {
+  if (isTextboxNode(object)) {
+    configureTextboxControls(object as fabric.Textbox);
+    return;
+  }
+
+  if (object instanceof ActiveSelection) {
+    configureSelectionMoveOnly(object);
+    return;
+  }
+
+  object.set({
+    lockScalingX: true,
+    lockScalingY: true,
+    lockRotation: true,
+  });
+  object.setControlsVisibility({
+    mt: false,
+    mb: false,
+    ml: false,
+    mr: false,
+    tl: false,
+    tr: false,
+    bl: false,
+    br: false,
+    mtr: false,
+  });
 }
 
 export function readBaseNodeFields(object: fabric.FabricObject) {
@@ -17,7 +52,6 @@ export function readBaseNodeFields(object: fabric.FabricObject) {
       y: object.top ?? 0,
     },
     size: { width, height },
-    rotation: object.angle ?? 0,
     visibility: object.visible ?? true,
     locked: object.selectable === false,
     opacity: object.opacity ?? 1,
@@ -32,10 +66,11 @@ export function applyBaseNodeFields(object: fabric.FabricObject, state: CanvasNo
     height: state.size.height,
     scaleX: 1,
     scaleY: 1,
-    angle: state.rotation,
+    angle: 0,
     visible: state.visibility,
     selectable: !state.locked,
     evented: !state.locked,
     opacity: state.opacity,
   });
+  configureNodeTransform(object);
 }

@@ -1,5 +1,6 @@
 import { resetMoveCursor, setDrawingCursor } from '@/features/canvas/utils/cursor';
 import { useAppStore } from '@/stores';
+import { configureNodeTransform } from '@/stores/nodes/fabric';
 import type { CanvasNodeState } from '@/stores/nodes/types';
 import type { NodeDefinition } from '@/stores/nodes/types';
 import type * as fabric from 'fabric';
@@ -75,6 +76,7 @@ export function attachPlacement(
   ) => {
     const state = definition.createState(placement);
     const object = definition.createFabricObject(state);
+    configureNodeTransform(object);
 
     canvas.add(object);
     useAppStore.getState().addNode(state as CanvasNodeState);
@@ -240,6 +242,7 @@ export function attachDragPlacement(
       height: Math.max(dragHeight, MIN_DRAG_SIZE),
     });
     const object = definition.createFabricObject(state);
+    configureNodeTransform(object);
 
     canvas.add(object);
     useAppStore.getState().addNode(state as CanvasNodeState);

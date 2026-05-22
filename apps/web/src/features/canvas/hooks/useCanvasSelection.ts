@@ -1,10 +1,17 @@
 import { arraysEqual, findObjectsByIds, getNodeObjects, getSelectedNodeIds } from '@/features/canvas/utils/selection';
 import { useAppStore } from '@/stores';
+import { configureNodeTransform } from '@/stores/nodes/fabric';
 import type * as fabric from 'fabric';
 import { ActiveSelection } from 'fabric';
 import { useEffect, useRef } from 'react';
 
 const SELECT_ALL = '__all__';
+
+function createActiveSelection(objects: fabric.FabricObject[]) {
+  const selection = new ActiveSelection(objects);
+  configureNodeTransform(selection);
+  return selection;
+}
 
 function applySelectionToCanvas(canvas: fabric.Canvas, selectedIds: string[]) {
   if (selectedIds.length === 0) {
@@ -21,11 +28,13 @@ function applySelectionToCanvas(canvas: fabric.Canvas, selectedIds: string[]) {
     }
 
     if (objects.length === 1) {
-      canvas.setActiveObject(objects[0]!);
+      const object = objects[0]!;
+      configureNodeTransform(object);
+      canvas.setActiveObject(object);
       return;
     }
 
-    canvas.setActiveObject(new ActiveSelection(objects));
+    canvas.setActiveObject(createActiveSelection(objects));
     return;
   }
 
@@ -37,11 +46,13 @@ function applySelectionToCanvas(canvas: fabric.Canvas, selectedIds: string[]) {
   }
 
   if (objects.length === 1) {
-    canvas.setActiveObject(objects[0]!);
+    const object = objects[0]!;
+    configureNodeTransform(object);
+    canvas.setActiveObject(object);
     return;
   }
 
-  canvas.setActiveObject(new ActiveSelection(objects));
+  canvas.setActiveObject(createActiveSelection(objects));
 }
 
 export function useCanvasSelection(canvas: fabric.Canvas | null) {
@@ -53,6 +64,11 @@ export function useCanvasSelection(canvas: fabric.Canvas | null) {
     if (!canvas) return;
 
     const syncToStore = () => {
+      const activeObject = canvas.getActiveObject();
+      if (activeObject) {
+        configureNodeTransform(activeObject);
+      }
+
       syncingFromCanvasRef.current = true;
       useAppStore.getState().setSelectedIds(getSelectedNodeIds(canvas));
       syncingFromCanvasRef.current = false;

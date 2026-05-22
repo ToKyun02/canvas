@@ -12,8 +12,6 @@ export function PropertiesSidebar() {
   const tmp = [
     'Position',
     'Zoom',
-    'Rotation',
-    'Scale',
     'Opacity',
     'Visibility',
     'Lock',

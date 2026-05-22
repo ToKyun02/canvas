@@ -1,6 +1,8 @@
 import { applyNodeStateToCanvas, stateFromFabricObject } from '@/features/canvas/utils/nodes';
+import { normalizeTextboxScalesInTarget } from '@/features/canvas/utils/textboxScaling';
 import { getNodeId } from '@/features/canvas/utils/selection';
 import { useAppStore } from '@/stores';
+import { ActiveSelection, type FabricObject } from 'fabric';
 import type * as fabric from 'fabric';
 import { useEffect, useRef } from 'react';
 
@@ -9,6 +11,17 @@ function syncObjectToStore(object: fabric.FabricObject) {
   if (!state) return;
 
   useAppStore.getState().setNode(state);
+}
+
+function syncTargetToStore(target: FabricObject) {
+  if (target instanceof ActiveSelection) {
+    for (const object of target.getObjects()) {
+      syncObjectToStore(object);
+    }
+    return;
+  }
+
+  syncObjectToStore(target);
 }
 
 function nodesEqual(a: unknown, b: unknown) {
@@ -25,9 +38,22 @@ export function useCanvasNodes(canvas: fabric.Canvas | null) {
 
     const onModified = (event: { target?: fabric.FabricObject }) => {
       if (!event.target) return;
+
+      if (normalizeTextboxScalesInTarget(event.target)) {
+        event.target.canvas?.requestRenderAll();
+      }
+
       syncingFromCanvasRef.current = true;
-      syncObjectToStore(event.target);
+      syncTargetToStore(event.target);
       syncingFromCanvasRef.current = false;
+    };
+
+    const onScaling = (event: { target?: fabric.FabricObject }) => {
+      if (!event.target) return;
+
+      if (normalizeTextboxScalesInTarget(event.target)) {
+        event.target.canvas?.requestRenderAll();
+      }
     };
 
     const onRemoved = (event: { target?: fabric.FabricObject }) => {
@@ -40,11 +66,13 @@ export function useCanvasNodes(canvas: fabric.Canvas | null) {
     };
 
     canvas.on('object:modified', onModified);
+    canvas.on('object:scaling', onScaling);
     canvas.on('text:changed', onModified);
     canvas.on('object:removed', onRemoved);
 
     return () => {
       canvas.off('object:modified', onModified);
+      canvas.off('object:scaling', onScaling);
       canvas.off('text:changed', onModified);
       canvas.off('object:removed', onRemoved);
     };
