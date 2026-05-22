@@ -15,9 +15,9 @@ export const initialTextNodeState: TextNodeState = {
   text: 'text',
   type: 'text',
   label: 'text',
-  fontSize: 14,
+  fontSize: 24,
   color: '#111827',
-  fill: '#ffffff',
+  fill: 'transparent',
   stroke: null,
 };
 
