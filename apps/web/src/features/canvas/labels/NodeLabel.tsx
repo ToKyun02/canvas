@@ -155,7 +155,7 @@ export function NodeLabel({
   return (
     <span
       className={cn(
-        'pointer-events-auto absolute z-10 max-w-48 truncate rounded px-1 py-0.5 text-xs select-none',
+        'pointer-events-auto absolute z-10 max-w-48 select-none truncate rounded px-1 py-0.5 text-xs',
         locked ? 'cursor-default' : 'cursor-grab active:cursor-grabbing',
         selected
           ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-300'
@@ -166,6 +166,7 @@ export function NodeLabel({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onDoubleClick={onDoubleClick}
+      data-node-id={nodeId}
     >
       {label}
     </span>
