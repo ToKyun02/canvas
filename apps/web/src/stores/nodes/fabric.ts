@@ -14,6 +14,22 @@ export function readScaledSize(object: fabric.FabricObject) {
   };
 }
 
+export function getObjectTopLeft(object: fabric.FabricObject) {
+  return object.translateToOriginPoint(object.getCenterPoint(), 'left', 'top');
+}
+
+export function getObjectSceneBounds(object: fabric.FabricObject) {
+  const { width, height } = readScaledSize(object);
+  const topLeft = getObjectTopLeft(object);
+
+  return {
+    x: topLeft.x,
+    y: topLeft.y,
+    width,
+    height,
+  };
+}
+
 export function configureNodeTransform(object: fabric.FabricObject) {
   if (isTextboxNode(object)) {
     configureTextboxControls(object as fabric.Textbox);
@@ -45,9 +61,7 @@ export function configureNodeTransform(object: fabric.FabricObject) {
 
 export function readBaseNodeFields(object: fabric.FabricObject) {
   const { width, height } = readScaledSize(object);
-  const originX = object.originX ?? 'left';
-  const originY = object.originY ?? 'top';
-  const { x, y } = object.translateToOriginPoint(object.getCenterPoint(), originX, originY);
+  const { x, y } = getObjectTopLeft(object);
 
   return {
     position: { x, y },
@@ -60,6 +74,8 @@ export function readBaseNodeFields(object: fabric.FabricObject) {
 
 export function applyBaseNodeFields(object: fabric.FabricObject, state: CanvasNodeState) {
   object.set({
+    originX: 'left',
+    originY: 'top',
     left: state.position.x,
     top: state.position.y,
     width: state.size.width,

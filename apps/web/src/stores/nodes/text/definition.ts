@@ -6,6 +6,8 @@ import { createTextNodeState, type TextNodeState } from './index';
 
 function createTextFabricObject(state: TextNodeState) {
   return new Textbox(state.text, {
+    originX: 'left',
+    originY: 'top',
     left: state.position.x,
     top: state.position.y,
     width: state.size.width,

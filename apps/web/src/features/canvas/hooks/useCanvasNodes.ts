@@ -2,6 +2,8 @@ import { applyNodeStateToCanvas, stateFromFabricObject } from '@/features/canvas
 import { isCanvasInteracting, markCanvasSyncEnd, markCanvasSyncStart } from '@/features/canvas/utils/canvasSync';
 import { normalizeTextboxScalesInTarget } from '@/features/canvas/utils/textboxScaling';
 import { getNodeId } from '@/features/canvas/utils/selection';
+import { getObjectTopLeft } from '@/stores/nodes/fabric';
+import type { CanvasNodeState } from '@/stores/nodes/types';
 import { useAppStore } from '@/stores';
 import { ActiveSelection, type FabricObject } from 'fabric';
 import type * as fabric from 'fabric';
@@ -11,7 +13,29 @@ function syncObjectToStore(object: fabric.FabricObject) {
   const state = stateFromFabricObject(object);
   if (!state) return;
 
+  const existing = useAppStore.getState().nodes[state.id];
+  if (existing) {
+    useAppStore.getState().setNode({
+      ...state,
+      label: existing.label,
+    });
+    return;
+  }
+
   useAppStore.getState().setNode(state);
+}
+
+function syncPositionToStore(object: fabric.FabricObject) {
+  const id = getNodeId(object);
+  if (!id) return;
+
+  const { x, y } = getObjectTopLeft(object);
+  const existing = useAppStore.getState().nodes[id];
+  if (!existing) return;
+
+  if (existing.position.x === x && existing.position.y === y) return;
+
+  useAppStore.getState().updateNode(id, { position: { x, y } });
 }
 
 function syncTargetToStore(target: FabricObject) {
@@ -25,8 +49,22 @@ function syncTargetToStore(target: FabricObject) {
   syncObjectToStore(target);
 }
 
-function nodesEqual(a: unknown, b: unknown) {
-  return JSON.stringify(a) === JSON.stringify(b);
+function syncTargetPositionToStore(target: FabricObject) {
+  if (target instanceof ActiveSelection) {
+    target.setCoords();
+    for (const object of target.getObjects()) {
+      syncPositionToStore(object);
+    }
+    return;
+  }
+
+  syncPositionToStore(target);
+}
+
+function fabricNodeMatchesStore(fabricNode: CanvasNodeState, storeNode: CanvasNodeState) {
+  const { label: _fl, ...fabricRest } = fabricNode;
+  const { label: _sl, ...storeRest } = storeNode;
+  return JSON.stringify(fabricRest) === JSON.stringify(storeRest);
 }
 
 function getActiveSelectionNodeIds(canvas: fabric.Canvas) {
@@ -51,6 +89,22 @@ export function useCanvasNodes(canvas: fabric.Canvas | null) {
 
   useEffect(() => {
     if (!canvas) return;
+
+    const onMoving = (event: { target?: fabric.FabricObject }) => {
+      if (!event.target) return;
+
+      markCanvasSyncStart(syncingFromCanvasRef);
+      syncTargetPositionToStore(event.target);
+      markCanvasSyncEnd(syncingFromCanvasRef);
+    };
+
+    const onResizing = (event: { target?: fabric.FabricObject }) => {
+      if (!event.target) return;
+
+      markCanvasSyncStart(syncingFromCanvasRef);
+      syncTargetPositionToStore(event.target);
+      markCanvasSyncEnd(syncingFromCanvasRef);
+    };
 
     const onModified = (event: { target?: fabric.FabricObject }) => {
       if (!event.target) return;
@@ -89,6 +143,8 @@ export function useCanvasNodes(canvas: fabric.Canvas | null) {
       markCanvasSyncEnd(syncingFromCanvasRef);
     };
 
+    canvas.on('object:moving', onMoving);
+    canvas.on('object:resizing', onResizing);
     canvas.on('object:modified', onModified);
     canvas.on('object:scaling', onScaling);
     canvas.on('text:changed', onModified);
@@ -97,6 +153,8 @@ export function useCanvasNodes(canvas: fabric.Canvas | null) {
     canvas.on('mouse:up', onTransformEnd);
 
     return () => {
+      canvas.off('object:moving', onMoving);
+      canvas.off('object:resizing', onResizing);
       canvas.off('object:modified', onModified);
       canvas.off('object:scaling', onScaling);
       canvas.off('text:changed', onModified);
@@ -121,7 +179,7 @@ export function useCanvasNodes(canvas: fabric.Canvas | null) {
       if (!object) continue;
 
       const fabricNode = stateFromFabricObject(object);
-      if (!fabricNode || nodesEqual(fabricNode, storeNode)) continue;
+      if (!fabricNode || fabricNodeMatchesStore(fabricNode, storeNode)) continue;
 
       applyNodeStateToCanvas(canvas, storeNode);
     }
