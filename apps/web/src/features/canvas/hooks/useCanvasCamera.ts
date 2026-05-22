@@ -1,3 +1,4 @@
+import { isCanvasInteracting } from '@/features/canvas/utils/canvasSync';
 import { zoomAtPoint } from '@/features/canvas/utils/zoomAtPoint';
 import { useAppStore } from '@/stores';
 import type * as fabric from 'fabric';
@@ -21,6 +22,10 @@ export function useCanvasCamera(canvas: fabric.Canvas | null) {
 
     const onWheel = (opt: fabric.TEvent<WheelEvent>) => {
       const e = opt.e;
+
+      if (isCanvasInteracting(canvas)) {
+        return;
+      }
 
       e.preventDefault();
       e.stopPropagation();

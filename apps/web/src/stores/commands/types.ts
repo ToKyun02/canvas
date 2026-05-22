@@ -1,4 +1,5 @@
 import type { NodeTool } from '@/stores/nodes/registry';
+import type { CanvasNodeState } from '@/stores/nodes/types';
 
 export type Tool = 'move' | NodeTool;
 
@@ -46,7 +47,16 @@ export interface EditorState {
   togglePropertiesSidebar: () => void;
 }
 
-export type AppState = CanvasState & HistoryState & SelectionState & EditorState;
+export interface NodesState {
+  nodes: Record<string, CanvasNodeState>;
+  nodeOrder: string[];
+  addNode: (node: CanvasNodeState) => void;
+  setNode: (node: CanvasNodeState) => void;
+  updateNode: (id: string, patch: Partial<CanvasNodeState>) => void;
+  removeNodes: (ids: string[]) => void;
+}
+
+export type AppState = CanvasState & HistoryState & SelectionState & EditorState & NodesState;
 
 export interface Command {
   id: string;

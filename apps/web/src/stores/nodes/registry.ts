@@ -23,3 +23,7 @@ export function getNodeDefinition(tool: NodeTool): NodeDefinition {
 export function isNodeTool(tool: string): tool is NodeTool {
   return tool in TOOL_TO_NODE;
 }
+
+export function getNodeDefinitionByType(type: string): NodeDefinition | undefined {
+  return NODE_DEFINITIONS[type as NodeType];
+}

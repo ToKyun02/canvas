@@ -4,6 +4,7 @@ import { devtools } from 'zustand/middleware';
 import { createCanvasSlice } from './slices/canvasSlice';
 import { createEditorSlice } from './slices/editorSlice';
 import { createHistorySlice } from './slices/historySlice';
+import { createNodesSlice } from './slices/nodesSlice';
 import { createSelectionSlice } from './slices/selectionSlice';
 import { AppState, Command } from './types';
 
@@ -137,6 +138,7 @@ export const useAppStore = create<AppState>()(
       ...createHistorySlice(...a),
       ...createSelectionSlice(...a),
       ...createEditorSlice(...a),
+      ...createNodesSlice(...a),
     }),
     {
       name: 'app-store',

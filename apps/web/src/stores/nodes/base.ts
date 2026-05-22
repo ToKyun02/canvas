@@ -10,7 +10,6 @@ export interface BaseNodeState {
     width: number;
     height: number;
   };
-  rotation: number;
   visibility: boolean;
   locked: boolean;
   opacity: number;
@@ -26,7 +25,6 @@ export const initialBaseNodeState: BaseNodeState = {
   type: '',
   position: { x: 0, y: 0 },
   size: { width: 100, height: 100 },
-  rotation: 0,
   visibility: true,
   locked: false,
   opacity: 1,
