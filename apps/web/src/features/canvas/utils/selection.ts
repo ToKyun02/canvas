@@ -1,4 +1,5 @@
 import type * as fabric from 'fabric';
+import { ActiveSelection } from 'fabric';
 
 type NodeData = {
   nodeId?: string;
@@ -24,7 +25,47 @@ export function getSelectedNodeIds(canvas: fabric.Canvas): string[] {
 }
 
 export function getNodeObjects(canvas: fabric.Canvas): fabric.FabricObject[] {
-  return canvas.getObjects().filter((object) => Boolean(getNodeId(object)));
+  const nodes: fabric.FabricObject[] = [];
+
+  for (const object of canvas.getObjects()) {
+    const id = getNodeId(object);
+    if (id) {
+      nodes.push(object);
+      continue;
+    }
+
+    if (object instanceof ActiveSelection) {
+      for (const child of object.getObjects()) {
+        if (getNodeId(child)) {
+          nodes.push(child);
+        }
+      }
+    }
+  }
+
+  return nodes;
+}
+
+export function sortObjectsByNodeOrder(
+  objects: fabric.FabricObject[],
+  nodeOrder: string[],
+) {
+  const index = new Map(nodeOrder.map((id, i) => [id, i]));
+
+  return [...objects].sort((a, b) => {
+    const ai = index.get(getNodeId(a) ?? '') ?? Number.MAX_SAFE_INTEGER;
+    const bi = index.get(getNodeId(b) ?? '') ?? Number.MAX_SAFE_INTEGER;
+    return ai - bi;
+  });
+}
+
+export function isSameSelectionMembers(
+  selection: ActiveSelection,
+  objects: fabric.FabricObject[],
+) {
+  const current = selection.getObjects();
+  if (current.length !== objects.length) return false;
+  return current.every((object, index) => object === objects[index]);
 }
 
 export function findObjectsByIds(canvas: fabric.Canvas, ids: string[]): fabric.FabricObject[] {

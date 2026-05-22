@@ -3,7 +3,9 @@ import {
   findObjectsByIds,
   getNodeObjects,
   getSelectedNodeIds,
+  isSameSelectionMembers,
   setsEqual,
+  sortObjectsByNodeOrder,
 } from '@/features/canvas/utils/selection';
 import { useAppStore } from '@/stores';
 import { configureNodeTransform } from '@/stores/nodes/fabric';
@@ -13,20 +15,30 @@ import { useEffect, useRef } from 'react';
 
 const SELECT_ALL = '__all__';
 
-function createActiveSelection(objects: fabric.FabricObject[]) {
-  const selection = new ActiveSelection(objects);
+function buildActiveSelection(canvas: fabric.Canvas, objects: fabric.FabricObject[]) {
+  const nodeOrder = useAppStore.getState().nodeOrder;
+  const ordered = sortObjectsByNodeOrder(objects, nodeOrder);
+  const selection = new ActiveSelection(ordered, { canvas });
   configureNodeTransform(selection);
+  selection.setCoords();
   return selection;
 }
 
-function isSameActiveSelection(canvas: fabric.Canvas, selectedIds: string[]) {
+function setMultiSelection(canvas: fabric.Canvas, objects: fabric.FabricObject[]) {
+  const nodeOrder = useAppStore.getState().nodeOrder;
+  const ordered = sortObjectsByNodeOrder(objects, nodeOrder);
   const activeObject = canvas.getActiveObject();
 
-  if (!(activeObject instanceof ActiveSelection) || selectedIds.length <= 1) {
-    return false;
+  if (
+    activeObject instanceof ActiveSelection &&
+    isSameSelectionMembers(activeObject, ordered)
+  ) {
+    configureNodeTransform(activeObject);
+    activeObject.setCoords();
+    return;
   }
 
-  return setsEqual(getSelectedNodeIds(canvas), selectedIds);
+  canvas.setActiveObject(buildActiveSelection(canvas, objects));
 }
 
 function applySelectionToCanvas(canvas: fabric.Canvas, selectedIds: string[]) {
@@ -50,7 +62,7 @@ function applySelectionToCanvas(canvas: fabric.Canvas, selectedIds: string[]) {
       return;
     }
 
-    canvas.setActiveObject(createActiveSelection(objects));
+    setMultiSelection(canvas, objects);
     return;
   }
 
@@ -75,12 +87,7 @@ function applySelectionToCanvas(canvas: fabric.Canvas, selectedIds: string[]) {
     return;
   }
 
-  if (isSameActiveSelection(canvas, selectedIds)) {
-    configureNodeTransform(canvas.getActiveObject()!);
-    return;
-  }
-
-  canvas.setActiveObject(createActiveSelection(objects));
+  setMultiSelection(canvas, objects);
 }
 
 export function useCanvasSelection(canvas: fabric.Canvas | null) {
@@ -91,19 +98,36 @@ export function useCanvasSelection(canvas: fabric.Canvas | null) {
   useEffect(() => {
     if (!canvas) return;
 
+    const syncSelectionFromCanvas = () => {
+      markCanvasSyncStart(syncingFromCanvasRef);
+
+      const ids = getSelectedNodeIds(canvas);
+
+      if (ids.length > 1) {
+        const objects = findObjectsByIds(canvas, ids);
+        if (objects.length > 1) {
+          setMultiSelection(canvas, objects);
+        }
+      }
+
+      useAppStore.getState().setSelectedIds(getSelectedNodeIds(canvas));
+      markCanvasSyncEnd(syncingFromCanvasRef);
+      canvas.requestRenderAll();
+    };
+
     const syncToStore = () => {
       markCanvasSyncStart(syncingFromCanvasRef);
       useAppStore.getState().setSelectedIds(getSelectedNodeIds(canvas));
       markCanvasSyncEnd(syncingFromCanvasRef);
     };
 
-    canvas.on('selection:created', syncToStore);
-    canvas.on('selection:updated', syncToStore);
+    canvas.on('selection:created', syncSelectionFromCanvas);
+    canvas.on('selection:updated', syncSelectionFromCanvas);
     canvas.on('selection:cleared', syncToStore);
 
     return () => {
-      canvas.off('selection:created', syncToStore);
-      canvas.off('selection:updated', syncToStore);
+      canvas.off('selection:created', syncSelectionFromCanvas);
+      canvas.off('selection:updated', syncSelectionFromCanvas);
       canvas.off('selection:cleared', syncToStore);
     };
   }, [canvas]);
