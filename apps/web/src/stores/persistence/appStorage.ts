@@ -29,17 +29,3 @@ const DEFAULTS: PersistedAppState = {
 export function partializeAppState(state: AppState): PersistedAppState {
   return Object.fromEntries(PERSISTED_KEYS.map((key) => [key, state[key]])) as PersistedAppState;
 }
-
-export function migrateAppState(persisted: unknown, _version: number): PersistedAppState {
-  if (!persisted || typeof persisted !== 'object') {
-    return DEFAULTS;
-  }
-
-  const state = persisted as Partial<PersistedAppState>;
-
-  return {
-    nodes: state.nodes ?? DEFAULTS.nodes,
-    nodeOrder: state.nodeOrder ?? DEFAULTS.nodeOrder,
-    isPropertiesSidebarOpen: state.isPropertiesSidebarOpen ?? DEFAULTS.isPropertiesSidebarOpen,
-  };
-}

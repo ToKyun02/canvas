@@ -1,9 +1,4 @@
-import {
-  APP_STORAGE_KEY,
-  APP_STORAGE_VERSION,
-  migrateAppState,
-  partializeAppState,
-} from '@/stores/persistence/appStorage';
+import { APP_STORAGE_KEY, APP_STORAGE_VERSION, partializeAppState } from '@/stores/persistence/appStorage';
 
 import { NODE_DEFINITIONS } from '@/stores/nodes/registry';
 import { create } from 'zustand';
@@ -157,7 +152,6 @@ export const useAppStore = create<AppState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: partializeAppState,
       version: APP_STORAGE_VERSION,
-      migrate: migrateAppState,
     },
   ),
 );
