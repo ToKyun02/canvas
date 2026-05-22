@@ -4,9 +4,7 @@ import {
   migrateAppState,
   partializeAppState,
 } from '@/stores/persistence/appStorage';
-import { migrateLegacyStorageKeys } from '@/stores/persistence/migrateLegacyStorage';
 
-migrateLegacyStorageKeys();
 import { NODE_DEFINITIONS } from '@/stores/nodes/registry';
 import { create } from 'zustand';
 import { createJSONStorage, devtools, persist } from 'zustand/middleware';
