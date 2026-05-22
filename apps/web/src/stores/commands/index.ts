@@ -1,6 +1,8 @@
+import { APP_STORAGE_KEY, APP_STORAGE_VERSION, partializeAppState } from '@/stores/persistence/appStorage';
+
 import { NODE_DEFINITIONS } from '@/stores/nodes/registry';
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { createJSONStorage, devtools, persist } from 'zustand/middleware';
 import { createCanvasSlice } from './slices/canvasSlice';
 import { createEditorSlice } from './slices/editorSlice';
 import { createHistorySlice } from './slices/historySlice';
@@ -119,6 +121,13 @@ export const COMMANDS: Command[] = [
     group: 'editor',
     execute: (store) => store.togglePropertiesSidebar(),
   },
+  {
+    id: 'editor.toggleNodeLabelsVisibility',
+    label: '노드 라벨 토글',
+    shortcut: 'mod+.',
+    group: 'editor',
+    execute: (store) => store.toggleNodeLabelsVisibility(),
+  },
 ];
 
 export const COMMAND_MAP = new Map<string, Command>(COMMANDS.map((command) => [command.id, command]));
@@ -132,16 +141,24 @@ export const executeCommand = (id: string, store: AppState) => {
 };
 
 export const useAppStore = create<AppState>()(
-  devtools(
-    (...a) => ({
-      ...createCanvasSlice(...a),
-      ...createHistorySlice(...a),
-      ...createSelectionSlice(...a),
-      ...createEditorSlice(...a),
-      ...createNodesSlice(...a),
-    }),
+  persist(
+    devtools(
+      (...a) => ({
+        ...createCanvasSlice(...a),
+        ...createHistorySlice(...a),
+        ...createSelectionSlice(...a),
+        ...createEditorSlice(...a),
+        ...createNodesSlice(...a),
+      }),
+      {
+        name: 'app-store',
+      },
+    ),
     {
-      name: 'app-store',
+      name: APP_STORAGE_KEY,
+      storage: createJSONStorage(() => localStorage),
+      partialize: partializeAppState,
+      version: APP_STORAGE_VERSION,
     },
   ),
 );
