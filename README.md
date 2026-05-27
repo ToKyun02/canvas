@@ -2,6 +2,15 @@
 
 프로젝트 의사결정을 돕는 시각적 프로토타입 에디터
 
+## 문서
+
+상세 설명 및 온보딩 자료는 `apps/docs` (VitePress)에서 제공합니다.
+
+```bash
+pnpm install
+pnpm --filter docs dev   # http://localhost:8000
+```
+
 ## 실행방법
 
 ### env 설정(.env.dev)

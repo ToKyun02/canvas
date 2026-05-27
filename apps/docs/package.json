@@ -1,0 +1,21 @@
+{
+  "name": "docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev --port 8000",
+    "build": "vitepress build",
+    "preview": "vitepress preview --port 8000"
+  },
+  "devDependencies": {
+    "@braintree/sanitize-url": "^7.0.4",
+    "cytoscape": "^3.30.4",
+    "cytoscape-cose-bilkent": "^4.1.0",
+    "dayjs": "^1.11.13",
+    "debug": "^4.4.0",
+    "mermaid": "^11.15.0",
+    "vitepress": "^1.6.3",
+    "vitepress-plugin-mermaid": "^2.0.17"
+  }
+}
