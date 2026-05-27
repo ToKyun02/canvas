@@ -5,6 +5,7 @@
 ## 문서
 
 상세 설명 및 온보딩 자료는 `apps/docs` (VitePress)에서 제공합니다.
+[호스팅 링크](https://canvas-doc.web.app)
 
 ```bash
 pnpm install
