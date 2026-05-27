@@ -28,6 +28,12 @@ playwright-report/
 # Vercel
 .vercel
 
+# Firebase
+.firebase
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
 # Build Outputs
 .next/
 out/
@@ -61,3 +67,14 @@ pnpm-debug.log*
 # Misc
 .DS_Store
 *.pem
+
+# VitePress (monorepo — any apps/*/docs path)
+**/.vitepress/cache/
+**/.vitepress/dist/
+# pnpm local store
+.pnpm-store/
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
