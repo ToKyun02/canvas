@@ -6,6 +6,7 @@ import { useCanvasViewportWheel } from '@/features/canvas/hooks/useCanvasViewpor
 import { useDrawingTools } from '@/features/canvas/hooks/useDrawingTools';
 import { useFabricCanvas } from '@/features/canvas/hooks/useFabricCanvas';
 import { NodeLabelsOverlay } from '@/features/canvas/labels/NodeLabelsOverlay';
+import { useGlobalShortcuts } from '@/features/shortcuts/hooks/useGlobalShortcuts';
 import type * as fabric from 'fabric';
 import { useRef, useState } from 'react';
 
@@ -22,6 +23,7 @@ export function Canvas({ className }: CanvasProps) {
     onCanvas: setCanvas,
     containerRef,
   });
+  useGlobalShortcuts();
   useCanvasCamera(canvas);
   useCanvasViewportWheel({ canvasContainerRef: containerRef, canvas });
   useCanvasHydration(canvas);
