@@ -1,11 +1,8 @@
 import {
   blockWheelDefault,
-  canEditableElementScroll,
   getWheelAnchorFromCanvas,
   handleViewportWheel,
-  isEditableWheelContext,
-  isEditableWheelTarget,
-  shouldAllowNativeWheelScroll,
+  hasEditableFocus,
 } from '@/features/canvas/utils/handleViewportWheel';
 import type * as fabric from 'fabric';
 import { useEffect, type RefObject } from 'react';
@@ -18,21 +15,9 @@ type UseCanvasViewportWheelOptions = {
 export function useCanvasViewportWheel({ canvasContainerRef, canvas }: UseCanvasViewportWheelOptions) {
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
-      if (shouldAllowNativeWheelScroll(e.target)) {
-        return;
-      }
+      blockWheelDefault(e);
 
-      if (isEditableWheelContext(e.target) && (e.metaKey || e.ctrlKey)) {
-        blockWheelDefault(e);
-        return;
-      }
-
-      if (isEditableWheelTarget(e.target)) {
-        if (canEditableElementScroll(e.target, e)) {
-          return;
-        }
-
-        blockWheelDefault(e);
+      if (hasEditableFocus() && (e.metaKey || e.ctrlKey)) {
         return;
       }
 
@@ -45,8 +30,6 @@ export function useCanvasViewportWheel({ canvasContainerRef, canvas }: UseCanvas
         handleViewportWheel(e, anchor, { canvas });
         return;
       }
-
-      blockWheelDefault(e);
     };
 
     window.addEventListener('wheel', onWheel, { passive: false, capture: true });
