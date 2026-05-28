@@ -17,11 +17,11 @@ interface NodeDefinition {
   icon?: string;          // 아이콘
   cursor?: string;        // 배치 시 커서
 
-  createState: () => CanvasNodeState;
-  createFabricObject: (state) => FabricObject;
-  stateFromFabricObject: (object) => CanvasNodeState;
-  applyStateToFabricObject: (object, state) => void;
-  onPlaced?: (object, canvas) => void;
+  createState: (placement: NodePlacement) => CanvasNodeState;
+  createFabricObject: (state: BaseNodeState) => FabricObject;
+  stateFromFabricObject: (object: FabricObject) => CanvasNodeState;
+  applyStateToFabricObject: (object: FabricObject, state: CanvasNodeState) => void;
+  onPlaced?: (object: FabricObject, canvas: Canvas) => void;
 }
 ```
 
@@ -29,7 +29,7 @@ interface NodeDefinition {
 
 ### 1. 상태 타입 정의
 
-`apps/web/src/stores/nodes/<type>/index.ts`에 노드 상태 타입과 `createState` 팩토리를 작성합니다.
+`apps/web/src/stores/nodes/<type>/index.ts`에 노드 상태 타입과 `createState(placement)` 팩토리를 작성합니다. `placement`에는 클릭 좌표(`x`, `y`)와 선택적 `width`/`height`가 전달됩니다.
 
 텍스트 노드 참고: `stores/nodes/text/index.ts`
 
@@ -67,7 +67,7 @@ export const TOOL_TO_NODE: Record<NodeTool, NodeDefinition> = {
 
 ### 6. 속성 패널 (선택)
 
-Properties Sidebar에 노드별 편집 UI를 추가하려면 `components/propertiesSidebar/`를 확장합니다.
+Properties Sidebar에 노드별 편집 UI를 추가하려면 `components/propertiesSidebar/`를 확장합니다. 현재 사이드바는 placeholder 메뉴만 포함합니다.
 
 ## 배치 흐름
 
@@ -82,9 +82,12 @@ sequenceDiagram
   User->>Store: setTool('text')
   Hook->>Placement: attachPlacement(canvas, definition)
   User->>Fabric: 클릭
-  Placement->>Store: addNode(state)
+  Placement->>Placement: createState(placement)
   Placement->>Fabric: createFabricObject(state)
+  Placement->>Fabric: canvas.add(object)
+  Placement->>Store: addNode(state)
   Placement->>Store: setTool('move')
+  Placement->>Fabric: onPlaced (편집 모드)
 ```
 
 핵심 파일: `features/canvas/drawing/placement.ts`

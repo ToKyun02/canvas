@@ -9,7 +9,7 @@ Canvas 에디터의 확장 가능한 노드 아키텍처입니다.
 각 노드는 두 표현을 가집니다:
 
 1. **State** (`CanvasNodeState`) — Zustand store의 직렬화 가능한 데이터
-2. **Fabric Object** — Fabric.js 캔버스上的 렌더링 객체
+2. **Fabric Object** — Fabric.js 캔버스 위의 렌더링 객체
 
 ## NodeDefinition
 
@@ -25,11 +25,11 @@ interface NodeDefinition {
   icon?: string;
   cursor?: string;
 
-  createState: (partial?) => CanvasNodeState;
-  createFabricObject: (state) => FabricObject;
-  stateFromFabricObject: (object) => CanvasNodeState;
-  applyStateToFabricObject: (object, state) => void;
-  onPlaced?: (object, canvas) => void;
+  createState: (placement: NodePlacement) => BaseNodeState;
+  createFabricObject: (state: BaseNodeState) => FabricObject;
+  stateFromFabricObject: (object: FabricObject) => CanvasNodeState;
+  applyStateToFabricObject: (object: FabricObject, state: CanvasNodeState) => void;
+  onPlaced?: (object: FabricObject, canvas: Canvas) => void;
 }
 ```
 
@@ -84,16 +84,16 @@ interface TextNodeState extends BaseNodeState {
 
 `features/canvas/drawing/placement.ts`의 `attachPlacement`:
 
-1. 도구 활성화 시 canvas에 click/mousemove 리스너 등록
-2. 클릭 위치에 `createState()` → `addNode()` → `createFabricObject()` → canvas.add
-3. `onPlaced` 콜백 (텍스트: 편집 모드)
-4. `onComplete` → `setTool('move')`
+1. 도구 활성화 시 canvas에 `mouse:down` 리스너 등록
+2. 클릭 위치에 `createState(placement)` → `createFabricObject(state)` → `canvas.add` → `addNode(state)`
+3. `onComplete` → `setTool('move')`
+4. `onPlaced` 콜백 (텍스트: 편집 모드)
 
 ## Base Node Fields
 
 `stores/nodes/base.ts`, `stores/nodes/fabric.ts`:
 
-공통 필드 (position, size, label)를 BaseNodeState와 Fabric read/write 유틸로 관리합니다.
+공통 필드(position, size, visibility, locked, opacity)를 `BaseNodeState`와 `readBaseNodeFields` / `applyBaseNodeFields` 유틸로 관리합니다.
 
 ## 노드 라벨
 

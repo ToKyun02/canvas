@@ -36,11 +36,10 @@ src/
 └── links/
     ├── links.module.ts
     ├── links.controller.ts
-    ├── links.service.ts
-    └── dto/
+    └── links.service.ts
 ```
 
-현재 `links` 모듈은 CRUD 예제로 포함되어 있습니다.
+현재 `links` 모듈은 CRUD 예제로 포함되어 있으며, DTO/엔티티 타입은 `@repo/api` 패키지에서 import합니다.
 
 ## 공유 패키지 (@repo/api)
 
