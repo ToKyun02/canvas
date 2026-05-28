@@ -1,12 +1,12 @@
-import { applyNodeStateToCanvas, stateFromFabricObject } from '@/features/canvas/utils/nodes';
 import { isCanvasInteracting, markCanvasSyncEnd, markCanvasSyncStart } from '@/features/canvas/utils/canvasSync';
-import { normalizeTextboxScalesInTarget } from '@/features/canvas/utils/textboxScaling';
+import { applyNodeStateToCanvas, stateFromFabricObject } from '@/features/canvas/utils/nodes';
 import { getNodeId } from '@/features/canvas/utils/selection';
+import { normalizeTextboxScalesInTarget } from '@/features/canvas/utils/textboxScaling';
+import { useAppStore } from '@/stores';
 import { getObjectTopLeft } from '@/stores/nodes/fabric';
 import type { CanvasNodeState } from '@/stores/nodes/types';
-import { useAppStore } from '@/stores';
-import { ActiveSelection, type FabricObject } from 'fabric';
 import type * as fabric from 'fabric';
+import { ActiveSelection, type FabricObject } from 'fabric';
 import { useEffect, useRef } from 'react';
 
 function syncObjectToStore(object: fabric.FabricObject) {
@@ -146,7 +146,6 @@ export function useCanvasNodes(canvas: fabric.Canvas | null) {
     canvas.on('object:moving', onMoving);
     canvas.on('object:resizing', onResizing);
     canvas.on('object:modified', onModified);
-    canvas.on('object:scaling', onScaling);
     canvas.on('text:changed', onModified);
     canvas.on('object:removed', onRemoved);
     canvas.on('mouse:down:before', onTransformStart);
@@ -156,7 +155,6 @@ export function useCanvasNodes(canvas: fabric.Canvas | null) {
       canvas.off('object:moving', onMoving);
       canvas.off('object:resizing', onResizing);
       canvas.off('object:modified', onModified);
-      canvas.off('object:scaling', onScaling);
       canvas.off('text:changed', onModified);
       canvas.off('object:removed', onRemoved);
       canvas.off('mouse:down:before', onTransformStart);

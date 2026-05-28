@@ -56,6 +56,8 @@ environment:
 
 ## web 앱에서 API URL 사용
 
+현재 web 앱 코드에서는 API를 호출하지 않지만, Docker Compose와 `.env.dev`는 `VITE_API_URL`을 주입하도록 구성되어 있습니다. API 연동 시 다음과 같이 읽을 수 있습니다:
+
 ```typescript
 const apiUrl = import.meta.env.VITE_API_URL;
 ```

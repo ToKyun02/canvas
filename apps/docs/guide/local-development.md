@@ -71,7 +71,14 @@ Turbo는 `build` 태스크에서 `dependsOn: ["^build"]`로 의존 패키지를 
 
 ### Dev Canvas API
 
-개발 모드에서 Fabric Canvas 인스턴스가 `devCanvasRegistry`에 등록됩니다. 브라우저 콘솔에서 캔버스를 디버깅할 수 있습니다.
+개발 모드에서 `injectDevCanvasApi()`가 `window.devCanvas`를 등록합니다. 브라우저 콘솔에서 store, canvas, 선택 노드 등을 디버깅할 수 있습니다.
+
+```javascript
+devCanvas.store.app.getState().nodes
+devCanvas.getSelectedNodeIds()
+devCanvas.getNodeById('<node-id>')
+devCanvas.canvas?.getObjects()
+```
 
 ### TanStack Router Devtools
 

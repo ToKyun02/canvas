@@ -7,53 +7,8 @@ type Point = { x: number; y: number };
 
 const EDITABLE_SELECTOR = 'input, textarea, select, [contenteditable="true"]';
 
-function isEditableElement(element: Element | null) {
-  return Boolean(element?.closest(EDITABLE_SELECTOR));
-}
-
-export function isEditableWheelTarget(target: EventTarget | null) {
-  return target instanceof Element && isEditableElement(target);
-}
-
 export function hasEditableFocus() {
-  return isEditableElement(document.activeElement);
-}
-
-export function isEditableWheelContext(target: EventTarget | null) {
-  return isEditableWheelTarget(target) || hasEditableFocus();
-}
-
-export function shouldAllowNativeWheelScroll(target: EventTarget | null) {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-
-  return Boolean(target.closest('[data-allow-native-scroll]'));
-}
-
-export function canEditableElementScroll(target: EventTarget | null, e: WheelEvent) {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-
-  const scrollable = target.closest('textarea, [data-allow-native-scroll]');
-  if (!(scrollable instanceof HTMLElement)) {
-    return false;
-  }
-
-  if (scrollable.scrollHeight <= scrollable.clientHeight) {
-    return false;
-  }
-
-  if (e.deltaY > 0) {
-    return scrollable.scrollTop + scrollable.clientHeight < scrollable.scrollHeight;
-  }
-
-  if (e.deltaY < 0) {
-    return scrollable.scrollTop > 0;
-  }
-
-  return false;
+  return document.activeElement instanceof Element && document.activeElement.matches(EDITABLE_SELECTOR);
 }
 
 export function getWheelAnchorFromCanvas(e: WheelEvent, canvasEl: HTMLCanvasElement | null): Point {
@@ -73,17 +28,10 @@ export function blockWheelDefault(e: WheelEvent) {
   e.stopPropagation();
 }
 
-export function handleViewportWheel(
-  e: WheelEvent,
-  anchor: Point,
-  options?: { canvas?: fabric.Canvas | null },
-) {
+export function handleViewportWheel(e: WheelEvent, anchor: Point, options?: { canvas?: fabric.Canvas | null }) {
   if (options?.canvas && isCanvasInteracting(options.canvas)) {
     return;
   }
-
-  e.preventDefault();
-  e.stopPropagation();
 
   const { panBy, setViewport } = useAppStore.getState();
   const isMod = e.metaKey || e.ctrlKey;

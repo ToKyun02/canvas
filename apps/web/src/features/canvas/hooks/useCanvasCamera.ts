@@ -10,6 +10,5 @@ export function useCanvasCamera(canvas: fabric.Canvas | null) {
     if (!canvas) return;
 
     canvas.setViewportTransform([zoom, 0, 0, zoom, position.x, position.y]);
-    canvas.requestRenderAll();
   }, [canvas, position, zoom]);
 }

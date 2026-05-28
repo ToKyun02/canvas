@@ -20,13 +20,6 @@ export type PersistedAppState = Pick<AppState, PersistedKey>;
 
 const PERSISTED_KEYS = Object.values(PERSIST_GROUPS).flat() as PersistedKey[];
 
-const DEFAULTS: PersistedAppState = {
-  nodes: {},
-  nodeOrder: [],
-  isPropertiesSidebarOpen: true,
-  isVisibleNodeLabels: true,
-};
-
 export function partializeAppState(state: AppState): PersistedAppState {
   return Object.fromEntries(PERSISTED_KEYS.map((key) => [key, state[key]])) as PersistedAppState;
 }

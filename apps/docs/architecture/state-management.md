@@ -36,21 +36,25 @@ useAppStore = create(
 
 ### HistorySlice
 
-Undo/Redo 스택. 노드 추가·수정·삭제 시 히스토리에 기록됩니다.
+실행 취소/다시 실행용 스택입니다. **현재는 `tool`(활성 도구) 변경만** 스냅샷으로 저장합니다.
+
+- 스냅샷 타입: `{ tool }` (`historySlice.ts`)
+- `pushHistory()` 유틸이 있으나, 아직 어떤 액션에서도 호출되지 않아 **undo/redo 커맨드는 사실상 비활성** 상태입니다
+- 노드 추가·수정·삭제 히스토리는 향후 `pushHistory` 연동 또는 별도 스냅샷 설계가 필요합니다
 
 ### SelectionSlice
 
 | 상태 | 설명 |
 |------|------|
-| `selectedIds` | 선택된 노드 ID 배열 |
-| `deleteSelectionRequest` | 삭제 트리거 (side effect용) |
+| `selectedIds` | 선택된 노드 ID 배열. `selectAll()`은 `['__all__']` sentinel을 사용 |
+| `deleteSelectionRequest` | 삭제 요청 카운터. `useCanvasSelection`이 증가를 감지해 Fabric 객체를 제거 |
 
 ### EditorSlice
 
 | 상태 | 기본값 | 설명 |
 |------|--------|------|
 | `isPropertiesSidebarOpen` | `true` | 속성 패널 표시 |
-| `isVisibleNodeLabels` | `true` | 노드 라벨 표시 |
+| `isVisibleNodeLabels` | `true` | 노드 표시 이름(라벨) 오버레이 표시 |
 
 ### NodesSlice
 
@@ -120,14 +124,18 @@ export const APP_STORAGE_VERSION = 2;
 
 ```mermaid
 flowchart LR
-  Store[nodes in Store] -->|useCanvasNodes| Fabric[Fabric Objects]
-  Fabric -->|object:modified| Store
+  Store[nodes in Store] -->|applyStateToFabricObject write| Fabric[Fabric Objects]
+  Fabric -->|stateFromFabricObject read| Store
   Store -->|useCanvasHydration| Fabric
 ```
 
-- **Hydration**: 앱 시작 시 store → Fabric 일괄 복원
-- **Sync**: 실시간 양방향 (이동, 리사이즈, 텍스트 편집)
-- **Placement**: 새 노드 생성 시 store + Fabric 동시 추가
+- **Hydration**: persist 복원 완료 후 `useCanvasHydration` → `hydrateCanvasFromStore`로 store → Fabric 일괄 복원
+- **Sync**: `useCanvasNodes`가 실시간 양방향 처리 — 캔버스 조작 시 Fabric read → `setNode`/`updateNode`, store 변경 시 Fabric write
+- **Selection**: `useCanvasSelection`이 Fabric selection ↔ `selectedIds` 동기화 및 삭제 처리
+- **Placement**: `createState` + `createFabricObject`로 store + Fabric 동시 추가
+- **Sync guard**: `canvasSync.ts`의 `syncingFromCanvasRef` / `isCanvasInteracting()`으로 루프·덮어쓰기 방지
+
+노드 타입별 변환은 `NodeDefinition`의 `stateFromFabricObject` / `applyStateToFabricObject`가 담당합니다. 메서드 역할·흐름은 [노드 시스템](/architecture/node-system)을 참고하세요.
 
 ## Devtools
 

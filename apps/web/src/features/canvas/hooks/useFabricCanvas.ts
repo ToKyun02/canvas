@@ -1,15 +1,13 @@
 import { devCanvasRegistry } from '@/dev/registry';
 import { useAppStore } from '@/stores';
-import { assignRef } from '@/utils/assignRef';
 import * as fabric from 'fabric';
 import { InteractiveFabricObject } from 'fabric';
-import { useEffect, type Ref, type RefObject } from 'react';
+import { useEffect, type RefObject } from 'react';
 
 type FabricCanvasOptions = NonNullable<ConstructorParameters<typeof fabric.Canvas>[1]>;
 
 type UseFabricCanvasOptions = {
-  ref?: Ref<fabric.Canvas>;
-  onLoad?: (canvas: fabric.Canvas) => void;
+  onCanvas?: (canvas: fabric.Canvas | null) => void;
   options?: FabricCanvasOptions;
   containerRef?: RefObject<HTMLElement | null>;
 };
@@ -24,7 +22,7 @@ function measureContainer(container: HTMLElement) {
 
 export function useFabricCanvas(
   domRef: RefObject<HTMLCanvasElement | null>,
-  { ref, onLoad, options, containerRef }: UseFabricCanvasOptions = {},
+  { onCanvas, options, containerRef }: UseFabricCanvasOptions = {},
 ) {
   useEffect(() => {
     const el = domRef.current;
@@ -76,15 +74,14 @@ export function useFabricCanvas(
 
     syncCanvasSize({ width, height });
 
-    assignRef(ref, canvas);
     devCanvasRegistry.register(canvas);
-    onLoad?.(canvas);
+    onCanvas?.(canvas);
 
     return () => {
       observer.disconnect();
       devCanvasRegistry.unregister(canvas);
-      assignRef(ref, null);
       canvas.dispose();
+      onCanvas?.(null);
     };
-  }, [containerRef, domRef, onLoad, options, ref]);
+  }, [containerRef, domRef, options, onCanvas]);
 }

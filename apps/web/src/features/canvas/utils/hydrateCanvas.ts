@@ -18,6 +18,4 @@ export function hydrateCanvasFromStore(canvas: fabric.Canvas) {
       canvas.add(object);
     }
   }
-
-  canvas.requestRenderAll();
 }
