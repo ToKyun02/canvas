@@ -1,11 +1,11 @@
-import type { CanvasNodeState } from './types';
 import {
   configureSelectionMoveOnly,
   configureTextboxControls,
   isTextboxNode,
 } from '@/features/canvas/utils/textboxScaling';
-import { ActiveSelection } from 'fabric';
 import type * as fabric from 'fabric';
+import { ActiveSelection } from 'fabric';
+import type { CanvasNodeState } from './types';
 
 export function readScaledSize(object: fabric.FabricObject) {
   return {

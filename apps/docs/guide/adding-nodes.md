@@ -25,6 +25,18 @@ interface NodeDefinition {
 }
 ```
 
+### 메서드별 구현 포인트
+
+| 메서드 | 구현 시 기억할 점 |
+|--------|-------------------|
+| `createState` | `placement.x/y`와 선택적 `width`/`height`로 초기 state + 새 `id` |
+| `createFabricObject` | `new`로 객체 생성, `data: { nodeId, nodeType }` 필수 |
+| `stateFromFabricObject` | Fabric **read** — 드래그·편집 후 store로 올릴 값 추출 (Zustand는 호출부가 갱신) |
+| `applyStateToFabricObject` | Fabric **write** — store 변경을 `object.set` 등으로 반영 |
+| `onPlaced` | 타입별 배치 직후 UX (텍스트: `enterEditing`) |
+
+`createFabricObject`는 **생성**, `applyStateToFabricObject`는 **이미 있는 객체 갱신**입니다. 상세·sync 흐름은 [노드 시스템](/architecture/node-system)을 참고하세요.
+
 ## 추가 절차 (체크리스트)
 
 ### 1. 상태 타입 정의
@@ -90,7 +102,12 @@ sequenceDiagram
   Placement->>Fabric: onPlaced (편집 모드)
 ```
 
-핵심 파일: `features/canvas/drawing/placement.ts`
+배치 이후 캔버스 조작 ↔ store 동기화는 `useCanvasNodes`가 `stateFromFabricObject`(Fabric read)와 `applyStateToFabricObject`(Fabric write)로 처리합니다.
+
+핵심 파일:
+
+- 배치: `features/canvas/drawing/placement.ts`
+- 동기화: `features/canvas/hooks/useCanvasNodes.ts`, `features/canvas/utils/nodes.ts`
 
 ## persist 주의사항
 

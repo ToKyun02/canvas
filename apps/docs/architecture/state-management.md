@@ -120,14 +120,16 @@ export const APP_STORAGE_VERSION = 2;
 
 ```mermaid
 flowchart LR
-  Store[nodes in Store] -->|useCanvasNodes| Fabric[Fabric Objects]
-  Fabric -->|object:modified| Store
+  Store[nodes in Store] -->|applyStateToFabricObject write| Fabric[Fabric Objects]
+  Fabric -->|stateFromFabricObject read| Store
   Store -->|useCanvasHydration| Fabric
 ```
 
 - **Hydration**: 앱 시작 시 store → Fabric 일괄 복원
-- **Sync**: 실시간 양방향 (이동, 리사이즈, 텍스트 편집)
-- **Placement**: 새 노드 생성 시 store + Fabric 동시 추가
+- **Sync**: `useCanvasNodes`가 실시간 양방향 처리 — 캔버스 조작 시 Fabric read → `setNode`, store 변경 시 Fabric write
+- **Placement**: `createState` + `createFabricObject`로 store + Fabric 동시 추가
+
+노드 타입별 변환은 `NodeDefinition`의 `stateFromFabricObject` / `applyStateToFabricObject`가 담당합니다. 메서드 역할·흐름은 [노드 시스템](/architecture/node-system)을 참고하세요.
 
 ## Devtools
 

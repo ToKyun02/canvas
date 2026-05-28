@@ -39,10 +39,7 @@ export function attachPlacement(
   definition: NodeDefinition,
   { onComplete }: PlacementOptions = {},
 ): () => void {
-  const finishPlacement = (
-    placement: { x: number; y: number },
-    detach: () => void,
-  ) => {
+  const finishPlacement = (placement: { x: number; y: number }, detach: () => void) => {
     const state = definition.createState(placement);
     const object = definition.createFabricObject(state);
     configureNodeTransform(object);
@@ -52,7 +49,6 @@ export function attachPlacement(
     detach();
     onComplete?.();
     definition.onPlaced?.(object, canvas);
-    canvas.requestRenderAll();
   };
 
   let detach: () => void;

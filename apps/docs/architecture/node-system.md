@@ -33,6 +33,79 @@ interface NodeDefinition {
 }
 ```
 
+### 왜 State와 Fabric을 둘 다 쓰나
+
+| | Fabric Object | Zustand (`CanvasNodeState`) |
+|---|---------------|----------------------------|
+| 역할 | 그리기, 드래그, 리사이즈, 인라인 편집 | 저장, 노드 목록, 속성 패널, undo |
+| 형태 | `Textbox` 등 라이브 객체 (메서드·이벤트) | 직렬화 가능한 plain JSON |
+
+Fabric만 쓰면 persist·패널·store 밖 로직이 Fabric API에 묶입니다. Store만 쓰면 화면 렌더링·조작을 할 수 없습니다. 그래서 **둘 다 유지**하고, 아래 5개 메서드로 맞춥니다.
+
+### 메서드 역할 요약
+
+| 메서드 | 시점 | 하는 일 |
+|--------|------|---------|
+| `createState` | 배치(최초 1회) | 클릭 좌표(`NodePlacement`)로 **초기 store 상태** 생성 |
+| `createFabricObject` | 배치·복원(객체 없을 때) | store 상태로 **Fabric 객체를 새로 생성** (`new Textbox(...)`) |
+| `stateFromFabricObject` | 배치 이후(sync) | Fabric에서 값을 **읽어** `CanvasNodeState`로 변환 |
+| `applyStateToFabricObject` | 배치 이후(sync) | `CanvasNodeState`를 **기존 Fabric 객체에 반영** (`object.set(...)`) |
+| `onPlaced` | 배치 직후(선택) | 배치 후 UX 후처리 (텍스트: 편집 모드 진입) |
+
+`createState` / `createFabricObject`는 **처음 만들 때**, `stateFromFabricObject` / `applyStateToFabricObject`는 **이후 계속 맞출 때** 사용합니다.
+
+### `createFabricObject` vs `applyStateToFabricObject`
+
+둘 다 store → Fabric 방향이지만 역할이 다릅니다.
+
+- **`createFabricObject`**: 캔버스에 아직 없을 때 **생성자**로 객체를 만듦. `data: { nodeId, nodeType }` 메타데이터도 여기서 설정.
+- **`applyStateToFabricObject`**: 이미 캔버스에 있는 객체의 속성만 **갱신**. 속성 패널·undo·store 복원 시 사용.
+
+복원(`createFabricObjectFromState`)에서는 생성 직후 `applyStateToFabricObject`를 한 번 더 호출해 상태를 완전히 맞춥니다 (`features/canvas/utils/nodes.ts`).
+
+### Sync: Fabric read / write
+
+`stateFromFabricObject`와 `applyStateToFabricObject`는 **Zustand API가 아닙니다**. Fabric ↔ `CanvasNodeState` **변환기**이며, read/write 관점은 **Fabric 기준**입니다.
+
+| | Fabric 관점 | Zustand는 누가 갱신? |
+|---|-------------|----------------------|
+| `stateFromFabricObject` | **read** — Textbox 등에서 속성을 읽음 | 호출부가 `setNode` / `updateNode` |
+| `applyStateToFabricObject` | **write** — `object.set(...)` 등으로 반영 | 호출부가 store에서 `state`를 넘김 |
+
+```
+[사용자가 캔버스 조작]
+  Fabric 변경
+    → stateFromFabricObject()   (Fabric read)
+    → setNode(state)            (Zustand write)
+
+[store만 변경 — 패널, undo, 복원 등]
+  nodes[id] 변경
+    → applyStateToFabricObject() (Fabric write)
+```
+
+실제 sync 오케스트레이션은 `features/canvas/hooks/useCanvasNodes.ts`가 담당합니다.
+
+- **Fabric → store**: `object:modified`, `text:changed` 등 → `stateFromFabricObject` → `setNode`
+- **store → Fabric**: `nodes` 변경 시 Fabric 상태와 비교 후 다르면 → `applyStateToFabricObject`
+
+유틸 래퍼: `features/canvas/utils/nodes.ts` (`stateFromFabricObject`, `applyStateToFabricObject`, `applyNodeStateToCanvas`, `createFabricObjectFromState`)
+
+```mermaid
+flowchart LR
+  subgraph init [배치 / 복원]
+    P[NodePlacement] --> CS[createState]
+    CS --> S[CanvasNodeState]
+    S --> CFO[createFabricObject]
+    CFO --> FO[FabricObject]
+    FO --> OP[onPlaced?]
+  end
+  subgraph sync [이후 동기화]
+    FO -->|stateFromFabricObject read| S
+    S -->|applyStateToFabricObject write| FO
+    S <-->|setNode / nodes 변경| Z[Zustand]
+  end
+```
+
 ## 레지스트리
 
 `stores/nodes/registry.ts`:
@@ -71,10 +144,13 @@ interface TextNodeState extends BaseNodeState {
 
 ### Fabric 매핑 (`stores/nodes/text/definition.ts`)
 
-- `createFabricObject` → `new Textbox(...)`
-- `stateFromFabricObject` → Textbox 속성 → TextNodeState
-- `applyStateToFabricObject` → state 변경 → Textbox.set(...)
-- `onPlaced` → 편집 모드 진입 + 전체 선택
+| 메서드 | 텍스트 노드 동작 |
+|--------|------------------|
+| `createState` | `createTextNodeState` — 클릭 좌표에 초기 TextNodeState |
+| `createFabricObject` | `new Textbox(...)` |
+| `stateFromFabricObject` | Textbox 속성 → `TextNodeState` (Fabric read) |
+| `applyStateToFabricObject` | `TextNodeState` → `textbox.set(...)` (Fabric write) |
+| `onPlaced` | `enterEditing` + `selectAll` |
 
 ### Fabric 메타데이터
 
