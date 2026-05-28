@@ -13,15 +13,17 @@ Canvas 에디터의 전체 커맨드 목록입니다. `Mod` = `Ctrl`(Windows/Lin
 
 | ID | 라벨 | 단축키 | 조건 |
 |----|------|--------|------|
-| `history.undo` | 실행 취소 | `Mod+Z` | canUndo |
-| `history.redo` | 복원 | `Mod+Shift+Z` | canRedo |
+| `history.undo` | 실행 취소 | `Mod+Z` | canUndo (현재 pushHistory 미연결로 사실상 비활성) |
+| `history.redo` | 복원 | `Mod+Shift+Z` | canRedo (동일) |
+
+`history.redo`의 UI 라벨은 "복원"이지만, 에디터 맥락에서는 **다시 실행(redo)** 에 해당합니다. `HistorySlice`는 현재 `tool` 스냅샷만 저장하며, `pushHistory()`가 아직 호출되지 않아 실질적인 undo/redo는 동작하지 않습니다.
 
 ## 선택 (selections)
 
 | ID | 라벨 | 단축키 | 조건 |
 |----|------|--------|------|
 | `selection.selectAll` | 전체 선택 | `Mod+A` | — |
-| `selection.clearSelection` | 선택 해제 | `Escape` | — |
+| `selection.clearSelection` | 선택 해제 | `Escape` | 선택 해제 후 이동 도구로 전환 |
 | `selection.deleteSelection` | 삭제 | `Delete` | 선택 있음 |
 | `selection.deleteSelectionByBackspace` | 삭제 | `Backspace` | 선택 있음 |
 
@@ -38,7 +40,7 @@ Canvas 에디터의 전체 커맨드 목록입니다. `Mod` = `Ctrl`(Windows/Lin
 | ID | 라벨 | 단축키 |
 |----|------|--------|
 | `editor.togglePropertiesSidebar` | 속성 패널 토글 | `Mod+/` |
-| `editor.toggleNodeLabelsVisibility` | 노드 라벨 토글 | `Mod+.` |
+| `editor.toggleNodeLabelsVisibility` | 노드 표시 이름 토글 | `Mod+.` |
 
 ## 커맨드 추가 방법
 

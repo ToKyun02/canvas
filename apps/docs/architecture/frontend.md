@@ -45,7 +45,7 @@ export function Canvas({ className }: CanvasProps) {
   useCanvasNodes(canvas);
 
   return (
-    <div ref={containerRef} className={className}>
+    <div ref={containerRef} className={`relative touch-none overscroll-none ${className ?? 'h-full w-full'}`}>
       <canvas ref={domRef} />
       <NodeLabelsOverlay canvas={canvas} />
     </div>
@@ -63,8 +63,8 @@ export function Canvas({ className }: CanvasProps) {
 | `useCanvasViewportWheel` | 휠 이벤트 → 줌/팬 |
 | `useCanvasHydration` | persist 상태 → Fabric 객체 복원 |
 | `useDrawingTools` | 도구별 노드 배치 (placement) |
-| `useCanvasSelection` | Fabric selection ↔ selectedIds |
-| `useCanvasNodes` | nodes 변경 ↔ Fabric sync |
+| `useCanvasSelection` | Fabric selection ↔ `selectedIds`, 삭제 요청 처리 |
+| `useCanvasNodes` | nodes 변경 ↔ Fabric sync (이동·리사이즈·편집·삭제) |
 
 ## Features 모듈
 
@@ -72,8 +72,8 @@ export function Canvas({ className }: CanvasProps) {
 features/
 ├── canvas/
 │   ├── hooks/       # 캔버스 관련 hooks
-│   ├── utils/       # zoom, selection, sync, cursor 등
-│   ├── labels/      # 노드 라벨 오버레이
+│   ├── utils/       # zoom, selection, sync, cursor, textboxScaling 등
+│   ├── labels/      # 노드 라벨 오버레이 (NodeLabelsOverlay, NodeLabel)
 │   └── drawing/     # placement (노드 배치)
 └── shortcuts/
     └── hooks/       # useGlobalShortcuts
@@ -81,9 +81,12 @@ features/
 
 ## UI 컴포넌트
 
-- `components/ui/` — shadcn/ui (Button, Sidebar, Input 등)
-- `components/propertiesSidebar/` — 우측 속성 패널 UI (현재 스캐폴딩)
+- `components/ui/` — shadcn/ui (Button, Sidebar, Input, theme-mode-toggle 등)
+- `components/canvas/zoomLevel.tsx`, `position.tsx` — 좌상단 줌·팬 좌표 HUD
+- `components/propertiesSidebar/` — 우측 속성 패널 (현재 placeholder 메뉴만)
 - `components/themeProvider.tsx` — 다크/라이트 테마
+
+`/canvas/` 페이지(`routes/canvas/index.tsx`)는 `ModeToggle`, `ZoomLevel`, `Position`, `Canvas`를 조합합니다.
 
 ## 전역 단축키
 
@@ -93,7 +96,10 @@ features/
 
 - **TanStack Router Devtools** — 라우트 디버깅
 - **Zustand devtools** — Redux DevTools 연동
-- **`window.devCanvas`** — DEV 모드 콘솔 디버깅 API
+- **`window.devCanvas`** — DEV 모드 콘솔 디버깅 API (`global-injection.ts`)
+  - `store.app` — Zustand store
+  - `canvas` — 현재 Fabric Canvas
+  - `getSelectedNodeIds()`, `getNodeById(id)`, `getNodes()`, `getNodeOrder()`
 
 ## 관련 문서
 

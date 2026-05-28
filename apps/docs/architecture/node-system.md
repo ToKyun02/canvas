@@ -37,7 +37,7 @@ interface NodeDefinition {
 
 | | Fabric Object | Zustand (`CanvasNodeState`) |
 |---|---------------|----------------------------|
-| 역할 | 그리기, 드래그, 리사이즈, 인라인 편집 | 저장, 노드 목록, 속성 패널, undo |
+| 역할 | 그리기, 드래그, 리사이즈, 인라인 편집 | 저장, 노드 목록, 속성 패널, persist |
 | 형태 | `Textbox` 등 라이브 객체 (메서드·이벤트) | 직렬화 가능한 plain JSON |
 
 Fabric만 쓰면 persist·패널·store 밖 로직이 Fabric API에 묶입니다. Store만 쓰면 화면 렌더링·조작을 할 수 없습니다. 그래서 **둘 다 유지**하고, 아래 5개 메서드로 맞춥니다.
@@ -59,7 +59,7 @@ Fabric만 쓰면 persist·패널·store 밖 로직이 Fabric API에 묶입니다
 둘 다 store → Fabric 방향이지만 역할이 다릅니다.
 
 - **`createFabricObject`**: 캔버스에 아직 없을 때 **생성자**로 객체를 만듦. `data: { nodeId, nodeType }` 메타데이터도 여기서 설정.
-- **`applyStateToFabricObject`**: 이미 캔버스에 있는 객체의 속성만 **갱신**. 속성 패널·undo·store 복원 시 사용.
+- **`applyStateToFabricObject`**: 이미 캔버스에 있는 객체의 속성만 **갱신**. 속성 패널·store→Fabric 복원 시 사용.
 
 복원(`createFabricObjectFromState`)에서는 생성 직후 `applyStateToFabricObject`를 한 번 더 호출해 상태를 완전히 맞춥니다 (`features/canvas/utils/nodes.ts`).
 
@@ -78,15 +78,20 @@ Fabric만 쓰면 persist·패널·store 밖 로직이 Fabric API에 묶입니다
     → stateFromFabricObject()   (Fabric read)
     → setNode(state)            (Zustand write)
 
-[store만 변경 — 패널, undo, 복원 등]
+[store만 변경 — 패널, persist 복원 등]
   nodes[id] 변경
     → applyStateToFabricObject() (Fabric write)
 ```
 
 실제 sync 오케스트레이션은 `features/canvas/hooks/useCanvasNodes.ts`가 담당합니다.
 
-- **Fabric → store**: `object:modified`, `text:changed` 등 → `stateFromFabricObject` → `setNode`
-- **store → Fabric**: `nodes` 변경 시 Fabric 상태와 비교 후 다르면 → `applyStateToFabricObject`
+- **Fabric → store**
+  - `object:moving` / `object:resizing` — 이동·리사이즈 중 `position`만 `updateNode`
+  - `object:modified` / `text:changed` — 변환 완료 후 `stateFromFabricObject` → `setNode`
+  - `object:removed` — `removeNodes`
+  - `object:scaling` — 텍스트박스 스케일 정규화(`textboxScaling.ts`) 후 렌더 갱신
+- **store → Fabric**: `nodes` 변경 시 Fabric 상태와 비교 후 다르면 → `applyNodeStateToCanvas`
+- **루프 방지**: `canvasSync.ts`로 캔버스 주도 sync 구간 표시, `isCanvasInteracting()`으로 드래그/리사이즈 중 store→Fabric 덮어쓰기 스킵
 
 유틸 래퍼: `features/canvas/utils/nodes.ts` (`stateFromFabricObject`, `applyStateToFabricObject`, `applyNodeStateToCanvas`, `createFabricObjectFromState`)
 
@@ -115,9 +120,13 @@ export const NODE_DEFINITIONS = {
   text: textNodeDefinition,
 } as const;
 
-export const TOOL_TO_NODE = {
+export const TOOL_TO_NODE: Record<NodeTool, NodeDefinition> = {
   text: textNodeDefinition,
 };
+
+export function getNodeDefinition(tool: NodeTool): NodeDefinition { /* ... */ }
+export function isNodeTool(tool: string): tool is NodeTool { /* ... */ }
+export function getNodeDefinitionByType(type: string): NodeDefinition | undefined { /* ... */ }
 ```
 
 타입 추론:
@@ -150,7 +159,7 @@ interface TextNodeState extends BaseNodeState {
 | `createFabricObject` | `new Textbox(...)` |
 | `stateFromFabricObject` | Textbox 속성 → `TextNodeState` (Fabric read) |
 | `applyStateToFabricObject` | `TextNodeState` → `textbox.set(...)` (Fabric write) |
-| `onPlaced` | `enterEditing` + `selectAll` |
+| `onPlaced` | `setActiveObject` 후 `enterEditing` + `selectAll` |
 
 ### Fabric 메타데이터
 
@@ -160,20 +169,34 @@ interface TextNodeState extends BaseNodeState {
 
 `features/canvas/drawing/placement.ts`의 `attachPlacement`:
 
-1. 도구 활성화 시 canvas에 `mouse:down` 리스너 등록
-2. 클릭 위치에 `createState(placement)` → `createFabricObject(state)` → `canvas.add` → `addNode(state)`
-3. `onComplete` → `setTool('move')`
-4. `onPlaced` 콜백 (텍스트: 편집 모드)
+1. 도구 활성화 시 canvas에 `mouse:down` 리스너 등록 (기존 객체 위 클릭은 무시)
+2. 클릭 위치(`opt.scenePoint`)에 `createState(placement)` → `createFabricObject(state)` → `configureNodeTransform` → `canvas.add` → `addNode(state)`
+3. `onComplete` → `setTool('move')` (`useDrawingTools`에서 전달)
+4. `onPlaced` 콜백 (텍스트: 활성화 + 편집 모드)
 
 ## Base Node Fields
 
 `stores/nodes/base.ts`, `stores/nodes/fabric.ts`:
 
-공통 필드(position, size, visibility, locked, opacity)를 `BaseNodeState`와 `readBaseNodeFields` / `applyBaseNodeFields` 유틸로 관리합니다.
+공통 필드(position, size, visibility, locked, opacity)를 `BaseNodeState`와 `readBaseNodeFields` / `applyBaseNodeFields` 유틸로 관리합니다. `applyBaseNodeFields`는 `configureNodeTransform`을 호출해 타입별 변환 규칙을 적용합니다.
+
+## 텍스트박스 리사이즈
+
+`features/canvas/utils/textboxScaling.ts`가 텍스트 노드 전용 동작을 담당합니다.
+
+- 가로 폭만 리사이즈 가능 (`configureTextboxControls`)
+- 스케일 대신 `width`/`fontSize`로 정규화 (`normalizeTextboxScalesInTarget`)
+- 다중 선택(`ActiveSelection`)은 이동만 허용 (`configureSelectionMoveOnly`)
 
 ## 노드 라벨
 
-`features/canvas/labels/NodeLabelsOverlay.tsx`가 DOM 오버레이로 노드 ID/타입 라벨을 표시합니다. Fabric viewportTransform을 따라 좌표를 변환합니다.
+`features/canvas/labels/NodeLabelsOverlay.tsx`가 DOM 오버레이로 각 노드의 **표시 이름(`node.label`)** 을 렌더합니다. Fabric `viewportTransform`과 store의 `zoom`/`position`으로 화면 좌표를 계산합니다.
+
+라벨은 `Mod+.`로 표시/숨김을 토글할 수 있으며, 표시 중에는 다음 상호작용이 가능합니다.
+
+- **클릭** — 해당 노드 선택 (`setSelectedIds`)
+- **드래그** — 노드 이동 (Fabric + store 동기화)
+- **더블클릭** — 라벨 이름 편집 (`updateNode({ label })`)
 
 ## 확장 가이드
 

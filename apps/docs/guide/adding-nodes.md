@@ -79,7 +79,7 @@ export const TOOL_TO_NODE: Record<NodeTool, NodeDefinition> = {
 
 ### 6. 속성 패널 (선택)
 
-Properties Sidebar에 노드별 편집 UI를 추가하려면 `components/propertiesSidebar/`를 확장합니다. 현재 사이드바는 placeholder 메뉴만 포함합니다.
+Properties Sidebar에 노드별 편집 UI를 추가하려면 `components/propertiesSidebar/`를 확장합니다. 현재 사이드바는 placeholder 메뉴만 있습니다.
 
 ## 배치 흐름
 
@@ -94,8 +94,8 @@ sequenceDiagram
   User->>Store: setTool('text')
   Hook->>Placement: attachPlacement(canvas, definition)
   User->>Fabric: 클릭
-  Placement->>Placement: createState(placement)
-  Placement->>Fabric: createFabricObject(state)
+  Placement->>Placement: createState(scenePoint)
+  Placement->>Fabric: createFabricObject + configureNodeTransform
   Placement->>Fabric: canvas.add(object)
   Placement->>Store: addNode(state)
   Placement->>Store: setTool('move')

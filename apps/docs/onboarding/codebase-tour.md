@@ -28,7 +28,7 @@ canvas/
 | ------------------------- | ----------------------------------------- |
 | `src/main.tsx`            | React 앱 부트스트랩, TanStack Router 등록 |
 | `src/routes/`             | 파일 기반 라우트 (`/`, `/canvas`)         |
-| `src/components/canvas/`  | Fabric.js 캔버스 React 래퍼               |
+| `src/components/canvas/`  | Fabric.js 캔버스 React 래퍼 + 줌/좌표 HUD |
 | `src/features/canvas/`    | 캔버스 hooks, 유틸, 라벨 오버레이         |
 | `src/stores/commands/`    | Zustand 스토어 + 커맨드 정의              |
 | `src/stores/nodes/`       | 노드 타입 레지스트리 및 정의              |
@@ -56,9 +56,15 @@ useCanvasCamera        → 줌/팬 카메라
 useCanvasViewportWheel → 휠 줌/팬
 useCanvasHydration     → localStorage → Fabric 동기화
 useDrawingTools        → 도구별 노드 배치
-useCanvasSelection     → 선택 상태 동기화
-useCanvasNodes         → Zustand ↔ Fabric 양방향 sync
+useCanvasSelection     → Fabric selection ↔ selectedIds, 삭제 처리
+useCanvasNodes         → Zustand ↔ Fabric 양방향 sync (이동·편집·삭제)
 ```
+
+추가로 자주 볼 유틸:
+
+- `features/canvas/utils/canvasSync.ts` — sync 루프/상호작용 중 guard
+- `features/canvas/utils/textboxScaling.ts` — 텍스트박스 폭 리사이즈·스케일 정규화
+- `features/canvas/utils/handleViewportWheel.ts` — 휠 줌/팬
 
 ## apps/api — 백엔드
 
@@ -97,9 +103,10 @@ flowchart LR
 
 1. `apps/web/src/stores/commands/index.ts` — 커맨드 + 스토어 생성
 2. `apps/web/src/stores/nodes/text/definition.ts` — 텍스트 노드 정의 예시
-3. `apps/web/src/features/canvas/drawing/placement.ts` — 노드 배치 로직
-4. `apps/web/src/features/canvas/utils/hydrateCanvas.ts` — 상태 복원
-5. `apps/web/src/features/shortcuts/hooks/useGlobalShortcuts.ts` — 단축키 처리
+3. `apps/web/src/features/canvas/hooks/useCanvasNodes.ts` — Fabric ↔ store 동기화
+4. `apps/web/src/features/canvas/drawing/placement.ts` — 노드 배치 로직
+5. `apps/web/src/features/canvas/utils/hydrateCanvas.ts` — persist 복원
+6. `apps/web/src/features/shortcuts/hooks/useGlobalShortcuts.ts` — 단축키 처리
 
 ## 다음 단계
 
