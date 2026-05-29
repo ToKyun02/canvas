@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteRouteImport } from './routes/login/route'
 import { Route as CanvasRouteRouteImport } from './routes/canvas/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CanvasIndexRouteImport } from './routes/canvas/index'
 
+const LoginRouteRoute = LoginRouteRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CanvasRouteRoute = CanvasRouteRouteImport.update({
   id: '/canvas',
   path: '/canvas',
@@ -32,33 +38,44 @@ const CanvasIndexRoute = CanvasIndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/canvas': typeof CanvasRouteRouteWithChildren
+  '/login': typeof LoginRouteRoute
   '/canvas/': typeof CanvasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRouteRoute
   '/canvas': typeof CanvasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/canvas': typeof CanvasRouteRouteWithChildren
+  '/login': typeof LoginRouteRoute
   '/canvas/': typeof CanvasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/canvas' | '/canvas/'
+  fullPaths: '/' | '/canvas' | '/login' | '/canvas/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/canvas'
-  id: '__root__' | '/' | '/canvas' | '/canvas/'
+  to: '/' | '/login' | '/canvas'
+  id: '__root__' | '/' | '/canvas' | '/login' | '/canvas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CanvasRouteRoute: typeof CanvasRouteRouteWithChildren
+  LoginRouteRoute: typeof LoginRouteRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/canvas': {
       id: '/canvas'
       path: '/canvas'
@@ -98,6 +115,7 @@ const CanvasRouteRouteWithChildren = CanvasRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CanvasRouteRoute: CanvasRouteRouteWithChildren,
+  LoginRouteRoute: LoginRouteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
